@@ -1,0 +1,159 @@
+body {
+  margin: 0;
+}
+
+a.post-link {
+  color: rgb(251, 114, 153);
+  text-decoration: none;
+}
+
+a.post-link:hover, a.post-link:active {
+  text-decoration: underline;
+}
+
+a {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:hover, a:active {
+  text-decoration: underline;
+}
+
+.post-emoticon {
+  margin: -1px 1px 0 1px;
+  display: inline-block; 
+  width: 20px; 
+  height: 20px; 
+  vertical-align: text-bottom;
+}
+
+.post-text.large .post-emoticon {
+  margin: -2px 2px 3px 2px;
+  width: 23px; 
+  height: 23px; 
+}
+
+.post-border {
+  border-style: solid;
+  border-width: 0;
+  border-bottom-width: 1px;
+  border-bottom-color: rgb(239, 243, 244);
+}
+
+ul.post-ul {
+  display: block;
+  list-style-type: none;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-inline-start: 0;
+}
+
+li.post-li {
+  display: block;
+  list-style-type: none;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-inline-start: 0;
+}
+
+li:not(:first-child) .post-top-chain {
+  height: 8px;
+  width: 2px;
+  margin-bottom: 4px;
+  margin-top: -12px;
+  background-color: rgb(207, 217, 222);
+}
+
+li:not(:last-child) .post-bottom-chain {
+  flex: 1;
+  width: 2px;
+  margin-top: 4px;
+  margin-bottom: -12px;
+  background-color: rgb(207, 217, 222);
+}
+
+.tippy-box[data-theme~='bitter'] {
+  color: #0f1419;
+  width: 300px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 16px;
+  border: 0;
+  box-shadow: rgb(101 119 134 / 20%) 0px 0px 15px, rgb(101 119 134 / 15%) 0px 0px 3px 1px;
+}
+
+.tippy-box[data-theme~='bitter'] .tippy-content {
+  padding: 0;
+}
+
+.p-dialog {
+  width: 600px;
+  max-height: 650px;
+  box-shadow: none;
+  border-radius: 16px;
+}
+
+.p-dialog .p-dialog-content {
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.p-button.p-button-rounded {
+  background-color: #0F1419;
+  height: 32px;
+  border-radius: 9999px;
+  border-color: rgba(0, 0, 0, 0);
+  border-width: 1px;
+  border-style: solid;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 16px;
+  box-shadow: none;
+  transition-duration: 0.2s;
+  transition-property: background-color;
+}
+
+.p-button.p-button-rounded.large {
+  height: 36px;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.p-button.p-button-rounded:hover {
+  background-color: rgb(39, 44, 48);
+  border-color: rgba(0, 0, 0, 0);
+  box-shadow: none;
+}
+
+.p-button.p-button-rounded:active, .p-button.p-button-rounded:focus {
+  background-color: rgb(63, 67, 71);
+  border-color: rgba(0, 0, 0, 0);
+  box-shadow: none;
+}
+
+#vue3-infinite-loading .container {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.user-followed-you {
+  font-size: 13px;
+  line-height: 16px;
+  padding: 0 4px;
+  background-color: rgb(239, 243, 244);
+  color: rgb(83, 100, 113);
+  border-radius: 4px;
+  height: 20px;
+}
+
+.user-special-followed-you {
+  font-size: 13px;
+  line-height: 16px;
+  padding: 0 4px;
+  background-color: rgb(251, 114, 153);
+  color: #fff;
+  border-radius: 4px;
+  height: 20px;
+}

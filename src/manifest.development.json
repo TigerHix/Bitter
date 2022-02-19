@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "Bitter",
+    "description": "Bilibili, but Twitter.",
+    "version": "0.0.1",
+    "background": {
+        "service_worker": "/js/background.js"
+    },
+    "permissions": [
+        "cookies",
+        "declarativeNetRequest",
+        "storage"
+    ],
+    "host_permissions": [
+        "*://*.bilibili.com/",
+        "*://grpc.biliapi.net/"
+    ],
+    "content_security_policy": {
+    },
+    "declarative_net_request": {
+        "rule_resources": [{
+            "id": "add_auth_headers",
+            "enabled": true,
+            "path": "rules.json"
+        }]
+    },
+    "action": {
+        "default_title": "Bitter"
+    }
+}

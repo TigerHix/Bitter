@@ -1,0 +1,16 @@
+[
+    {
+      "id": 1,
+      "priority": 1,
+      "action": {
+        "type": "modifyHeaders",
+        "requestHeaders": [
+          { "header": "bitter", "operation": "set", "value": "true" }
+        ],
+        "responseHeaders": [
+            { "header": "bitter", "operation": "set", "value": "true" }
+          ]
+      },
+      "condition": { "urlFilter": "||api.vc.bilibili.com", "resourceTypes": ["xmlhttprequest"] }
+    }
+]

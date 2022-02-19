@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "Bitter",
+    "description": "Bilibili, but Twitter.",
+    "version": "0.0.1",
+    "background": {
+        "service_worker": "/js/background.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
