@@ -157,3 +157,20 @@ li:not(:last-child) .post-bottom-chain {
   border-radius: 4px;
   height: 20px;
 }
+
+.p-tabview .p-tabview-panels {
+  padding: 0;
+  border: 0;
+}
+
+.p-component {
+  font-family: unset;
+  font-size: unset;
+  font-weight: unset;
+}
+
+.p-tabview-title {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: bold;
+}

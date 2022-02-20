@@ -4,7 +4,9 @@ import { CommentSection, CommentSectionSort, Post } from "../../models/models";
 import { parseCommentSection, parsePost, parseCommentTypeAndObjectId } from "../../utils/parsers"
 import PostCard from "./postCard.vue"
 import { useRouter } from "vue-router"
+import { useStore } from "vuex";
 const router = useRouter()
+const store = useStore()
 const path = router.currentRoute.value.fullPath
 
 const props = defineProps({ 
@@ -32,7 +34,10 @@ fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail
     .then((res) => res.json())
     .then((data) => {
         commentSection.value = parseCommentSection(data.data, post)
-        comments.value.push(...commentSection.value.comments)
+
+        const fetchedComments = commentSection.value.comments
+        fetchedComments.forEach(it => store.commit('cachePost', it))
+        comments.value.push(...fetchedComments)
         console.log(commentSection.value)
     });
 
@@ -57,8 +62,10 @@ const loadMoreComments = async $state => {
       $state.error()
     } else {
       commentSection.value = parseCommentSection(data.data, post)
-      console.log(commentSection.value)
-      comments.value.push(...commentSection.value.comments)
+      
+      const fetchedComments = commentSection.value.comments
+      fetchedComments.forEach(it => store.commit('cachePost', it))
+      comments.value.push(...fetchedComments)
       if (commentSection.value.comments.length > 0) {
         $state.loaded()
       } else {
@@ -79,10 +86,10 @@ const loadMoreComments = async $state => {
         <div v-for="comment in comments" :key="comment.id" class="post-border">
             <ul class="post-ul">
                 <li class="post-li">
-                    <PostCard :postObject="comment" :link="true" /> 
+                    <PostCard :postId="comment.id" :resolvePostId="false" :link="true" /> 
                 </li>
                 <li v-for="chainedComment in comment.chainedPosts" :key="chainedComment.id" class="post-li">
-                    <PostCard :postObject="chainedComment" :link="true" />
+                    <PostCard :postId="chainedComment.id" :resolvePostId="false" :link="true" />
                 </li>
                 <div v-if="comment.commentCount > comment.chainedPosts?.length ?? 0" class="post-show-replies flex flex-row px-3 justify-content-center align-items-center" @click="onShowReplies(comment)">
                     <div class="flex flex-column justify-content-between align-items-center" style="width: 48px; height: 16px;">

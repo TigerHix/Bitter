@@ -3,20 +3,20 @@ import { DateTime } from 'luxon';
 
 const locale = function(diff: number, idx: number, totalSec?: number): [string, string] {
   const arr = [
-    ['刚刚', 'right now'],
-    ['%s 秒前', 'in %s seconds'],
-    ['1 分钟前', 'in 1 minute'],
-    ['%s 分钟前', 'in %s minutes'],
-    ['1 小时前', 'in 1 hour'],
-    ['%s 小时前', 'in %s hours'],
-    ['1 天前', 'in 1 day'],
-    ['%s 天前', 'in %s days'],
-    ['1 星期前', 'in 1 week'],
-    ['%s 星期前', 'in %s weeks'],
-    ['1 月前', 'in 1 month'],
-    ['%s 月前', 'in %s months'],
-    ['1 年前', 'in 1 year'],
-    ['%s 年前', 'in %s years']
+    ['刚刚', '刚刚'],
+    ['%s 秒前', '刚刚'],
+    ['1 分钟前', '刚刚'],
+    ['%s 分钟前', '刚刚'],
+    ['1 小时前', '刚刚'],
+    ['%s 小时前', '刚刚'],
+    ['1 天前', '刚刚'],
+    ['%s 天前', '刚刚'],
+    ['1 星期前', '刚刚'],
+    ['%s 星期前', '刚刚'],
+    ['1 月前', '刚刚'],
+    ['%s 月前', '刚刚'],
+    ['1 年前', '刚刚'],
+    ['%s 年前', '刚刚']
   ][idx]
   return [arr[0], arr[1]]
 };
@@ -31,4 +31,9 @@ const formatTime = (timestamp: number) => {
   return date.toLocaleString(DateTime.TIME_SIMPLE) + ' · ' + date.toLocaleString(DateTime.DATE_MED)
 }
 
-export { formatTimeAgo, formatTime }
+const formatYearMonth = (timestamp: number) => {
+  const date = DateTime.fromSeconds(timestamp)
+  return date.toFormat('y') + ' 年 ' + date.toFormat('L') + ' 月'
+}
+
+export { formatTimeAgo, formatTime, formatYearMonth }

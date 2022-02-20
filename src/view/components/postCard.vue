@@ -3,7 +3,7 @@ import Avatar from "./avatar"
 import VideoCard from "./videoCard"
 import ColumnCard from "./columnCard"
 import { Post, PostImage, PostType, User } from "./../../models/models"
-import { computed, defineProps, onMounted, PropType, ref } from "vue"
+import { computed, defineProps, onMounted, ref } from "vue"
 import { formatTimeAgo, formatTime } from "./../../utils/formatTimestamp"
 import { parsePost } from "../../utils/parsers"
 import { RouteLocationRaw, useRouter } from "vue-router";
@@ -13,8 +13,10 @@ import LikeButton from './likeButton.vue'
 import IconButton from './iconButton.vue'
 import { LikeListReply, LikeListReq } from "../../proto/app/dynamic/v2/dynamic_grpc_web_pb"
 import { dynamicClient, makeHeaders } from "../../utils/appRequests"
+import { useStore } from 'vuex'
 import PostText from "./postText.vue"
-const router = useRouter();
+const router = useRouter()
+const store = useStore()
 
 const removeRouterGuard = router.beforeEach(() => {
   likedUsersDialog.value = false
@@ -22,29 +24,29 @@ const removeRouterGuard = router.beforeEach(() => {
 })
 
 const props = defineProps({ 
-  postId: { type: String, required: false, default: null }, 
-  postObject: { type: Object as PropType<Post>, required: false, default: null }, 
+  postId: { type: String, required: true },
+  resolvePostId: { type: Boolean, required: false, default: true },
+  updatePost: { type: Boolean, required: false, default: false },
   embedded: { type: Boolean, required: false, default: false },
   large: { type: Boolean, required: false, default: false },
   link: { type: Boolean, required: false, default: false },
   noPadding: { type: Boolean, required: false, default: false }
 });
-let resolvedPost = ref(null);
-let postDeleted = ref(false);
+let postDeleted = ref(false)
 const post = computed<Post>(() => {
-  if (props.postObject) return props.postObject
-  if (resolvedPost.value) return resolvedPost.value
-  return null
+  return store.getters.getCachedPost(props.postId)
 })
 
-if (!props.postObject && props.postId) {
+if ((!post.value && props.resolvePostId) || props.updatePost) {
   fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${props.postId}`)
       .then((res) => res.json())
       .then((data) => {
         if (!data.data.card) {
           postDeleted.value = true
         } else {
-          resolvedPost.value = parsePost(data.data.card)
+          console.log('Parsing: ')
+          console.log(data)
+          store.commit('cachePost', parsePost(data.data.card))
         }
       });
 }
@@ -79,7 +81,7 @@ const onLink = (newTab: boolean = false) => {
   if (p.type === PostType.Comment) {
     args = { name: 'comment', params: { type: p.commentType, objectId: p.commentObjectId, rootId: p.commentRootId, targetId: p.id, threadId: p.commentThreadId }}
   } else {
-    args = { name: 'post', params: { postId: p.id, postObject: p }}
+    args = { name: 'post', params: { postId: p.id }}
   }
   if (newTab) {
     window.open(router.resolve(args).href, '_blank')
@@ -155,16 +157,16 @@ onMounted(() => {
     此动态已被删除。
   </div>
   <div v-if="post" ref="postContainer" class="post-container" :class="{ 'post-container-link': link, 'large': large, 'no-padding': noPadding }"  @click="link && onLink() && $event.stopPropagation()" @click.middle="link && onLink(true) && $event.stopPropagation()">
-    <div v-if="post.isPinned" class="flex post-header" :class="{ 'large': large }">
-      <div style="font-size: 16px; margin-right: 12px; width: 20px;">
+    <div v-if="post.isPinned && !embedded" class="flex post-header" :class="{ 'large': large }">
+      <div class="flex justify-content-center align-items-center" style="font-size: 16px; margin-right: 12px; width: 20px;">
         <font-awesome-icon :icon="['fas', 'thumbtack']" />
       </div>
-      <div style="margin-top: 1px;">
+      <div>
         <span class="post-link" style="padding-top: 2px;">{{ post.type === PostType.Comment ? '置顶评论' : '置顶动态' }}</span>
       </div>
     </div>
-    <div v-else-if="post.likedBy.length > 0" class="flex post-header" :class="{ 'large': large }">
-      <div style="font-size: 16px; margin-right: 12px; width: 20px;">
+    <div v-else-if="post.likedBy?.length > 0 && !embedded" class="flex post-header" :class="{ 'large': large, 'embedded': embedded }">
+      <div class="flex justify-content-center align-items-center" style="font-size: 16px; margin-right: 12px; width: 20px;">
         <font-awesome-icon :icon="['fas', 'heart']" />
       </div>
       <div style="margin-top: 1px;">
@@ -274,7 +276,7 @@ onMounted(() => {
               <div v-for="(image, index) in post.album.images" :key="image.url" class="col-4 p-0">
                 <div class="post-triple-image-container" :class="{ 'large': large }" @click.stop>
                   <photo-provider :default-backdrop-opacity="0.9">
-                    <photo-consumer v-for="(src, index2) in post.album.images.map(it => it.url)" :intro="src" :key="index2" :src="src">
+                    <photo-consumer v-for="(src, index2) in post.album.images.map(it => it.url)" :key="index2" :src="src">
                       <img v-if="index === index2" :src="getTripleImageThumbnail(image)" />
                     </photo-consumer>
                   </photo-provider>
@@ -292,8 +294,8 @@ onMounted(() => {
           <ColumnCard :column="post.column" :link="true" />
         </div>
 
-        <div v-if="post.sourcePostId" class="post-embedded-post-container" style="margin-top: 14px;">
-          <PostCard :postId="post.sourcePostId" :embedded="true" :link="true" style="border-radius: 16px;" />
+        <div v-if="post.sourcePostId" class="post-embedded-post-container" style="margin-top: 14px; border-radius: 16px;">
+          <PostCard :postId="post.sourcePostId" :embedded="true" :link="true" />
         </div>
 
         <div v-if="large" class="post-timestamp mt-3">
@@ -342,7 +344,8 @@ onMounted(() => {
               </LikeButton>
             </div>
             <div class="col-3 p-0 flex justify-content-start align-items-center">
-              <font-awesome-icon :icon="['fas', 'arrow-up-from-bracket']" />
+              <IconButton :icon="['fas', 'arrow-up-from-bracket']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(29, 155, 240)" activeColor="rgb(29, 155, 240)" hoverBackgroundColor="rgba(29, 155, 240, 0.1)" activeBackgroundColor="rgba(29, 155, 240, 0.2)">
+              </IconButton>
             </div>
           </div>
         </div>
@@ -352,7 +355,7 @@ onMounted(() => {
 
   <Dialog header="Header" v-model:visible="likedUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
     <div class="liked-users-dialog-container" style="overflow: auto; max-height: 660px;">
-      <TopBar title="点赞者" :click-handler="() => likedUsersDialog = false" />
+      <TopBar title="点赞者" :icon="['fas', 'xmark']" :click-handler="() => likedUsersDialog = false" />
       <div id="liked-users">
         <AvatarCard v-for="likedUser in likedUsers" :key="likedUser.uid" :user="likedUser" :link="true" />
         <InfiniteLoading v-if="likedUsersDialog" :firstLoad="true" target=".liked-users-dialog-container" :likedUsers="likedUsers" @infinite="loadMoreLikedUsers" class="flex justify-content-center py-4">
@@ -396,7 +399,7 @@ onMounted(() => {
   color: #536471;
   padding-left: 30px;
   margin-top: -8px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 .post-header .post-link {
   color: #536471;
@@ -408,6 +411,9 @@ onMounted(() => {
   padding-left: 0;
   margin-top: -16px;
   margin-bottom: 4px;
+}
+.post-header.embedded {
+  padding-left: 0;
 }
 .post-username {
   font-size: 15px;
@@ -472,6 +478,7 @@ onMounted(() => {
   border-style: solid;
   border-radius: 16px;
   max-width: 100%;
+  object-fit: cover;
 }
 .post-double-image-container {
   width: fit-content;
@@ -486,6 +493,7 @@ onMounted(() => {
   border-radius: 16px 0 0 16px;
   width: 251px;
   height: 284px;
+  object-fit: cover;
 }
 .post-double-image-container.right img {
   padding-left: 2px;
@@ -498,6 +506,7 @@ onMounted(() => {
   border-radius: 0 16px 16px 0;
   width: 251px;
   height: 284px;
+  object-fit: cover;
 }
 .post-triple-image-container {
   height: 168px;
@@ -513,6 +522,7 @@ onMounted(() => {
   max-width: 100%;
   width: 168px;
   height: 168px;
+  object-fit: cover;
 }
 .post-triple-image-container.large img {
   width: 188px;

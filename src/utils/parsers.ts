@@ -193,8 +193,8 @@ export const parsePost = (data: any): Post => {
     post.commentCount = post.column.commentCount
   }
 
-  console.log(post.user.name + ": " + post.text)
-  console.log(data)
+  // console.log(post.user.name + ": " + post.text)
+  // console.log(data)
 
   return post;
 };

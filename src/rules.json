@@ -5,12 +5,14 @@
       "action": {
         "type": "modifyHeaders",
         "requestHeaders": [
-          { "header": "bitter", "operation": "set", "value": "true" }
+          { "header": "bitter", "operation": "set", "value": "true" },
+          { "header": "origin", "operation": "set", "value": "https://t.bilibili.com" },
+          { "header": "referer", "operation": "set", "value": "https://t.bilibili.com" }
         ],
         "responseHeaders": [
-            { "header": "bitter", "operation": "set", "value": "true" }
-          ]
+          { "header": "bitter", "operation": "set", "value": "true" }
+        ]
       },
-      "condition": { "urlFilter": "||api.vc.bilibili.com", "resourceTypes": ["xmlhttprequest"] }
+      "condition": { "domainType": "thirdParty", "urlFilter": "||api.bilibili.com", "resourceTypes": ["xmlhttprequest"] }
     }
 ]

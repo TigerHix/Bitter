@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { CommentSection, Post } from "./../models/models";
-import { defineProps, PropType, ref, nextTick, computed } from "vue";
+import { defineProps, ref, nextTick, computed } from "vue";
 import { parseComment, parseCommentSection, parseCommentSectionByTypeAndObjectId, parsePost } from "../utils/parsers";
 import PostCard from "./components/postCard.vue";
 import TopBar from "./components/topBar.vue";
 import { useRouter } from "vue-router";
-const router = useRouter();
+import { useStore } from "vuex";
+const router = useRouter()
+const store = useStore()
 const path = router.currentRoute.value.fullPath
 
 const props = defineProps({ 
@@ -13,15 +15,13 @@ const props = defineProps({
   objectId: { type: String, required: true },
   rootId: { type: String, required: true },
   postId: { type: String, required: true },
-  postObject: { type: Object as PropType<Post>, required: false, default: null },
-  targetId: { type: String, required: false, default: -1 },
-  targetObject: { type: Object as PropType<Post>, required: false, default: null },
-  threadId: { type: String, required: false, default: -1 }
+  targetId: { type: String, required: true },
+  threadId: { type: String, required: false, default: '0' }
 });
 
 const commentSection = ref<CommentSection>(null)
 const abovePosts = ref<Post[]>([])
-const mainPost = ref<Post>()
+const mainPost = ref<Post>(null)
 const belowPosts = ref<Post[]>([])
 
 const loaded = ref(false)
@@ -30,22 +30,31 @@ const mainPostDiv = ref(null)
 const containerHeightPixels = ref(0)
 const containerHeight = computed(() => containerHeightPixels.value + 'px')
 
-// Thread ID is given -> Show thread context
-// Target ID is given -> Locate target, or show root
-
 fetch(`https://api.bilibili.com/x/v2/reply/detail?type=${props.type}&oid=${props.objectId}&root=${props.targetId}`)
   .then((res) => res.json())
   .then((data) => {
-    commentSection.value = parseCommentSectionByTypeAndObjectId(data.data, props.type, props.objectId)
-    mainPost.value = commentSection.value.comments[0]
-    belowPosts.value = commentSection.value.comments.slice(1)
-    if (props.postObject) {
-      return Promise.resolve(props.postObject)
+    console.log(data)
+    const fetchedCommentSection: CommentSection = parseCommentSectionByTypeAndObjectId(data.data, props.type, props.objectId)
+    const fetchedComments = fetchedCommentSection.comments
+    fetchedComments.forEach(it => store.commit('cachePost', it))
+    commentSection.value = fetchedCommentSection
+
+    mainPost.value = fetchedComments[0]
+    belowPosts.value = fetchedComments.slice(1)
+
+    console.log(mainPost.value)
+    
+    const abovePost = store.getters.getCachedPost(props.postId)
+    if (abovePost) {
+      return Promise.resolve(abovePost)
     } else {
       return fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${props.postId}`)
         .then((res) => res.json())
         .then((data) => {
-          return Promise.resolve(parsePost(data.data.card))
+          const fetchedPost = parsePost(data.data.card)
+          store.commit('cachePost', fetchedPost)
+
+          return Promise.resolve(fetchedPost)
         });
     }
   })
@@ -58,7 +67,10 @@ fetch(`https://api.bilibili.com/x/v2/reply/detail?type=${props.type}&oid=${props
       return fetch(`https://api.bilibili.com/x/v2/reply/detail?type=${props.type}&oid=${props.objectId}&root=${props.rootId}`)
         .then((res) => res.json())
         .then((data) => {
-          return Promise.resolve(parseComment(data.data.root, props.type, props.objectId))
+          const fetchedComment = parseComment(data.data.root, props.type, props.objectId)
+          store.commit('cachePost', fetchedComment)
+
+          return Promise.resolve(fetchedComment)
         });
     }
   })
@@ -71,7 +83,10 @@ fetch(`https://api.bilibili.com/x/v2/reply/detail?type=${props.type}&oid=${props
       return fetch(`http://api.bilibili.com/x/v2/reply/dialog/cursor?type=${props.type}&oid=${props.objectId}&root=${props.rootId}&dialog=${props.threadId}&size=9999`)
           .then((res) => res.json())
           .then((data) => {
-            return Promise.resolve(parseCommentSection(data.data, abovePosts.value[0]))
+            const fetchedCommentSection = parseCommentSection(data.data, abovePosts.value[0])
+            fetchedCommentSection.comments.forEach(it => store.commit('cachePost', it))
+
+            return Promise.resolve(fetchedCommentSection)
           });
     } else {
       return Promise.resolve(null)
@@ -124,8 +139,10 @@ const loadMoreComments = async $state => {
       $state.error()
     } else {
       commentSection.value = parseCommentSectionByTypeAndObjectId(data.data, props.type, props.objectId)
-      console.log(commentSection.value)
-      belowPosts.value.push(...commentSection.value.comments.slice(1))
+
+      const fetchedComments = commentSection.value.comments.slice(1)
+      fetchedComments.forEach(it => store.commit('cachePost', it))
+      belowPosts.value.push(...fetchedComments)
       if (commentSection.value.comments.length > 1) {
         $state.loaded();
       } else {
@@ -146,16 +163,16 @@ const loadMoreComments = async $state => {
       <div v-show="loaded">
         <ul class="post-ul">
           <li v-for="post in abovePosts" :key="post.id" class="post-li">
-            <PostCard :postObject="post" :link="true" /> 
+            <PostCard :postId="post.id" :link="true" /> 
           </li>
-          <li ref="mainPostDiv" class="post-li">
-            <PostCard :postObject="mainPost" :large="true" /> 
+          <li class="post-li" v-if="mainPost" ref="mainPostDiv">
+            <PostCard :postId="mainPost.id" :large="true" /> 
           </li>
         </ul>
         <div v-if="belowPosts">
           <ul class="post-ul">
             <li v-for="post in belowPosts" :key="post.id" class="post-li">
-              <PostCard :postObject="post" :link="true" /> 
+              <PostCard :postId="post.id" :link="true" /> 
             </li>
           </ul>
           <InfiniteLoading v-if="loaded" :belowPosts="belowPosts" @infinite="loadMoreComments" class="flex justify-content-center py-4">

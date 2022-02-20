@@ -6,7 +6,6 @@ const props = defineProps({
   video: { type: Object as PropType<PostVideo>, required: true },
   link: { type: Boolean, required: false, default: false }
 })
-console.log(props.video)
 
 const onLink = () => window.open(props.video.url, '_blank');
 </script>

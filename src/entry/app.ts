@@ -13,6 +13,9 @@ import PrimeVue from 'primevue/config'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Dialog from 'primevue/dialog';
+import RadioButton from 'primevue/radiobutton';
+import TabView from "primevue/tabview";
+import TabPanel from "primevue/tabpanel";
 import 'primevue/resources/themes/lara-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
@@ -20,15 +23,15 @@ import 'primeflex/primeflex.css'
 import './../assets/index.css'
 
 import linkify from 'vue-linkify'
-import InfiniteLoading from "v3-infinite-loading";
+import InfiniteLoading from "../view/components/infiniteLoading/InfiniteLoading.vue";
 import "v3-infinite-loading/lib/style.css";
 import 'animate.css';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faHeart as fasHeart, faRetweet as fasRetweet, faArrowUpFromBracket as fasArrowUpFromBracket, faHome as fasHome, faHashtag as fasHashtag, faBell as fasBell, faEnvelope as fasEnvelope, faBookmark as fasBookmark, faRectangleList as fasRectangleList, faUser as fasUser, faGear as fasGear, faFeatherPointed as fasFeatherPointed, faArrowLeft as fasArrowLeft, faThumbTack as fasThumbTack } from '@fortawesome/free-solid-svg-icons'
+import { faHeart as fasHeart, faRetweet as fasRetweet, faArrowUpFromBracket as fasArrowUpFromBracket, faHome as fasHome, faHashtag as fasHashtag, faBell as fasBell, faEnvelope as fasEnvelope, faBookmark as fasBookmark, faRectangleList as fasRectangleList, faUser as fasUser, faGear as fasGear, faFeatherPointed as fasFeatherPointed, faArrowLeft as fasArrowLeft, faThumbTack as fasThumbTack, faCalendarDays as fasCalendarDays, faXmark as fasXmark } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as farHeart, faComment as farComment, faFaceSmile as farFaceSmile } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(fasHeart, farHeart, fasRetweet, farComment, fasArrowUpFromBracket, fasHome, fasHashtag, fasBell, fasEnvelope, fasBookmark, fasRectangleList, fasUser, fasGear, fasFeatherPointed, farFaceSmile, fasArrowLeft, fasThumbTack)
+library.add(fasHeart, farHeart, fasRetweet, farComment, fasArrowUpFromBracket, fasHome, fasHashtag, fasBell, fasEnvelope, fasBookmark, fasRectangleList, fasUser, fasGear, fasFeatherPointed, farFaceSmile, fasArrowLeft, fasThumbTack, fasCalendarDays, fasXmark)
 import VueTippy from 'vue-tippy'
 import vue3PhotoPreview from 'vue3-photo-preview';
 import 'vue3-photo-preview/dist/index.css';
@@ -47,10 +50,13 @@ const router: Router = createRouter({
   routes
 })
 
+import { Post, User } from '@/models/models'
 import { createStore } from 'vuex'
 const store = createStore({
   state() {
     return {
+      csrf: null,
+      user: null,
       cache: {
         posts: {}
       }
@@ -63,7 +69,28 @@ const store = createStore({
   },
   mutations: {
     cachePost(state: any, post: Post) {
-      state.cache.posts[post.id] = post
+      const cache = (post: Post) => {
+        const cachedPost = state.cache.posts[post.id]
+
+        // Handle special properties
+        if (!post.likedBy || post.likedBy.length === 0)
+          if (cachedPost?.likedBy?.length > 0)
+            post.likedBy = cachedPost.likedBy
+
+        state.cache.posts[post.id] = {
+          ...cachedPost,
+          ...Object.fromEntries(Object.entries(post).filter(([_, v]) => v != null))
+        }
+      }
+
+      cache(post)
+      post.chainedPosts?.forEach(cache)
+    },
+    setUser(state: any, user: User) {
+      state.user = user
+    },
+    setCsrf(state: any, csrf: string) {
+      state.csrf = csrf
     }
   }
 })
@@ -75,6 +102,9 @@ app.use(PrimeVue)
 app.component('Button', Button)
 app.component('Card', Card)
 app.component('Dialog', Dialog)
+app.component('RadioButton', RadioButton)
+app.component('TabView', TabView)
+app.component('TabPanel', TabPanel)
 app.directive('linkified', linkify)
 app.component("InfiniteLoading", InfiniteLoading);
 app.use(VueTippy, {
@@ -83,6 +113,5 @@ app.use(VueTippy, {
 app.use(vue3PhotoPreview);
 import 'tippy.js/dist/tippy.css'
 import "tippy.js/themes/light-border.css";
-import { Post } from '@/models/models'
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.mount('#app')

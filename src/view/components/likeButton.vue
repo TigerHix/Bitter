@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { defineProps, onMounted, PropType, ref } from "vue"
-import { Post } from "../../models/models"
+import { useStore } from "vuex";
+import {Post, PostType} from "../../models/models"
 import IconButton from "./iconButton.vue"
+const store = useStore()
 
 const props = defineProps({
   post: { type: Object as PropType<Post>, required: true },
@@ -12,7 +14,7 @@ const props = defineProps({
 const iconButton = ref(null)
 
 // TODO: Refactor animation
-const onLike = () => {
+const onLike = async () => {
   const post = props.post
   if (post.isLiked) {
     post.isLiked = false
@@ -22,6 +24,34 @@ const onLike = () => {
     post.likeCount++
     iconButton.value.iconEl.classList.add('animate__animated', 'animate__rubberBand')
   }
+  let response
+  if (post.type != PostType.Comment) {
+    response = await fetch(`https://api.vc.bilibili.com/dynamic_like/v1/dynamic_like/thumb`, {
+      method: 'post',
+      body: new URLSearchParams({
+        uid: store.state.user.uid,
+        dynamic_id: post.id,
+        up: post.isLiked ? '1' : '2',
+        csrf_token: store.state.csrf,
+        csrf: store.state.csrf
+      })
+    })
+  } else {
+    response = await fetch(`https://api.bilibili.com/x/v2/reply/action`, {
+      method: 'post',
+      body: new URLSearchParams({
+        oid: post.commentObjectId!,
+        type: post.commentType!.toString(),
+        rpid: post.id,
+        action: post.isLiked ? '1' : '0',
+        ordering: 'time',
+        jsonp: 'jsonp',
+        csrf: store.state.csrf
+      })
+    })
+  }
+  const data = await response.json()
+  console.log(data)
 }
 
 onMounted(() => {

@@ -1,5 +1,4 @@
 declare module 'vue-linkify';
-declare module 'v3-infinite-loading'
 declare module 'luxon'
 declare module 'vue-tippy'
 declare module 'md5'

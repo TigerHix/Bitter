@@ -40,6 +40,8 @@ defineExpose({
 }
 .icon-button-icon-container {
   border-radius: 9999px;
+  background-color: transparent;
+  transition-duration: 0.2s;
 }
 .icon-button:hover {
   color: v-bind(hoverColor);

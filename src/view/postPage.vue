@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PostCard from "./components/postCard"
+import PostCard from "./components/postCard.vue"
 import { Post } from "./../models/models";
 import { defineProps, PropType } from "vue";
 import CommentList from "./components/commentList.vue";
@@ -16,7 +16,7 @@ defineProps({
     <TopBar title="动态" />
     <div class="post-page-container">
       <div>
-        <PostCard :postId="postId" :postObject="postObject" :large="true" />
+        <PostCard :postId="postId" :updatePost="true" :large="true" />
         <CommentList :postId="postId ?? postObject?.id" />
       </div>
     </div>

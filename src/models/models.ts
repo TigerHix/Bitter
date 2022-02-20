@@ -134,6 +134,10 @@ export interface User {
     followingCount?: number
 
     coverUrl?: string
+
+    // Me only
+    followingGroups?: FollowingGroup[]
+    registrationTimestamp?: number
 }
 
 export enum PostType {
@@ -145,4 +149,13 @@ export enum PostType {
     ShortVideo = 16,
     Column = 64,
     Live = 4308 // or 4201
+}
+
+export interface FollowingGroup {
+    default: boolean
+
+    id: string
+    name: string
+    count: number
+    users: Map<number, User>
 }

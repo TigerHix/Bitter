@@ -18,10 +18,13 @@ const onClick = (newTab: boolean = false) => {
     if (newTab) window.open(router.resolve('/profile/' + props.user.uid).href, '_blank')
     else router.push('/profile/' + props.user.uid)
 }
-const onShow = () => {
+let fetchedProfile = false
+const onHover = () => {
+    if (fetchedProfile) return
     fetchAndParseUserProfile(props.user.uid)
         .then((user: any) => {
             Object.assign(props.user, user)
+            fetchedProfile = true
         })
 }
 const appendToApp = () => document.querySelector(".main-column");
@@ -31,7 +34,7 @@ const appendToApp = () => document.querySelector(".main-column");
     <tippy 
         v-if="popup"
         :appendTo="appendToApp"
-        @trigger="onShow()"
+        @trigger="onHover()"
         interactive
         :arrow="false"
         placement="bottom" 
