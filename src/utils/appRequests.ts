@@ -1,6 +1,7 @@
 import { DynamicClient } from '../proto/app/dynamic/v2/DynamicServiceClientPb';
 import { Md5 } from 'ts-md5/dist/md5';
 import { GrpcConfig } from './grpcConfig';
+import {RepostListReq, RepostListRsp} from "@/proto/app/dynamic/v2/dynamic_pb";
 
 export enum ClientType {
     iOS, Android

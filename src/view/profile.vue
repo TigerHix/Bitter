@@ -1,8 +1,9 @@
 <script setup lang="ts">
 
 import { ref, defineProps } from "vue";
+import AvatarCard from './components/avatarCard.vue'
 import PostCard from "./components/postCard.vue";
-import {parseAndFilterPosts, parseImage} from "@/utils/parsers";
+import {parseAndFilterPosts, parseDetailedUser, parseImage} from "@/utils/parsers";
 import { useRouter } from "vue-router";
 import { fetchAndParseUserProfile } from "@/utils/appRequests";
 import FollowButton from "./components/followButton.vue";
@@ -23,7 +24,7 @@ let user = ref<User>();
 fetchAndParseUserProfile(props.uid)
   .then((it: any) => {
     user.value = it
-    
+
     if (store.state.user.uid.toString() === props.uid.toString()) {
       fetch('https://member.bilibili.com/x2/creative/h5/calendar/event?ts=0')
         .then(res => res.json())
@@ -169,6 +170,88 @@ const onTabChange = () => {
   mediaPosts.value = []
 }
 
+// Following users
+const followingUsersDialog = ref(false)
+const followingUsers = ref<User[]>([])
+const sameFollowingUserIds = new Set<number>()
+let followingUsersNextPage = 1
+let sameFollowingUsersExhausted = false
+let followingUsersAccessDenied = ref(false)
+const loadMoreFollowingUsers = async ($state: any) => {
+  console.log("Loading more following users");
+
+  try {
+    const data = await fetch(
+        sameFollowingUsersExhausted
+            ? `https://api.bilibili.com/x/relation/followings?vmid=${props.uid}&pn=${followingUsersNextPage}&ps=50&order_type=attention&jsonp=jsonp`
+            : `https://api.bilibili.com/x/relation/same/followings?vmid=${props.uid}&pn=${followingUsersNextPage}&ps=50&order_type=attention&jsonp=jsonp`
+    ).then(res => res.json())
+
+    if (data.code > 0) {
+      followingUsersAccessDenied.value = true
+      $state.complete()
+    } else if (data.data.list.length == 0) {
+      if (!sameFollowingUsersExhausted) {
+        sameFollowingUsersExhausted = true
+        followingUsersNextPage = 1
+        $state.loaded()
+      } else {
+        $state.complete()
+      }
+    } else {
+      const fetchedUsers = data.data.list.map(parseDetailedUser).filter((it: User) => !sameFollowingUserIds.has(it.uid))
+      followingUsers.value.push(...fetchedUsers)
+      followingUsersNextPage++
+      if (!sameFollowingUsersExhausted) {
+        fetchedUsers.forEach((it: User) => {
+          sameFollowingUserIds.add(it.uid)
+          it.following = true
+        })
+      }
+      $state.loaded()
+    }
+  } catch (e) {
+    console.log(e)
+    $state.error()
+  }
+}
+const openFollowingUsersDialog = () => {
+  followingUsersDialog.value = true
+  // loadMoreLikedUsers({ error: () => {}, loaded: () => {}, complete: () => {} })
+}
+
+// Follower users
+const followerUsersDialog = ref(false)
+const followerUsers = ref<User[]>([])
+let followerUsersNextPage = 1
+let followerUsersAccessDenied = ref(false)
+const loadMoreFollowerUsers = async ($state: any) => {
+  console.log("Loading more follower users");
+
+  try {
+    const data = await fetch(`https://api.bilibili.com/x/relation/followers?vmid=${props.uid}&pn=${followerUsersNextPage}&ps=50&order_type=attention&jsonp=jsonp`).then(res => res.json())
+
+    if (data.code > 0) {
+      followerUsersAccessDenied.value = true
+      $state.complete()
+    } else if (data.data.list.length == 0) {
+      $state.complete()
+    } else {
+      const fetchedUsers = data.data.list.map(parseDetailedUser)
+      followerUsers.value.push(...fetchedUsers)
+      followerUsersNextPage++
+      $state.loaded()
+    }
+  } catch (e) {
+    console.log(e)
+    $state.error()
+  }
+}
+const openFollowerUsersDialog = () => {
+  followerUsersDialog.value = true
+  // loadMoreLikedUsers({ error: () => {}, loaded: () => {}, complete: () => {} })
+}
+
 </script>
 
 <template>
@@ -178,7 +261,7 @@ const onTabChange = () => {
       <div style="width: 100%; height: 200px;">
         <img style="width: 100%; height: 100%; object-fit: cover;" :src="user.coverUrl + '@1200w.webp'" @error="$event.target.src = 'https://i0.hdslb.com/bfs/space/cb1c3ef50e22b6096fde67febe863494caefebad.png@2560w_400h_100q_1o.webp'" />
       </div>
-      <div style="padding: 12px 16px;">
+      <div style="padding: 16px 12px 8px 12px;">
         <div class="flex" style="flex-wrap: wrap; justify-content: space-between;">
           <div style="width: 25%; margin-top: -15%; margin-bottom: 12px; background: white; border-radius: 9999px; padding: 4px;">
             <Avatar :user="user" :popup="false" style="width: 100%; height: 100%;" />
@@ -208,14 +291,14 @@ const onTabChange = () => {
           </div>
         </div>
         <div v-if="user.followingCount != null" class="flex flex-row" style="margin-top: 12px;">
-            <div>
-                <span class="header-stats-number">{{ user.followingCount }} </span>
-                <span class="header-stats" style="margin-left: 4px;">正在关注</span>
-            </div>
-            <div style="margin-left: 20px;">
-                <span class="header-stats-number">{{ user.followerCount }}</span>
-                <span class="header-stats" style="margin-left: 4px;">关注者</span>
-            </div>
+          <a @click="openFollowingUsersDialog()" class="header-stats-link">
+            <span class="header-stats-number">{{ user.followingCount }}&nbsp;</span>
+            <span class="header-stats">正在关注</span>
+          </a>
+          <a @click="openFollowerUsersDialog()" class="header-stats-link" style="margin-left: 20px;">
+              <span class="header-stats-number">{{ user.followerCount }}&nbsp;</span>
+              <span class="header-stats">关注者</span>
+          </a>
         </div>
       </div>
     </div>
@@ -243,6 +326,38 @@ const onTabChange = () => {
         </TabPanel>
       </TabView>
     </div>
+    <Dialog header="Header" v-model:visible="followingUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
+      <div class="users-dialog-container" style="overflow: auto; max-height: 660px;">
+        <TopBar title="正在关注" :icon="['fas', 'xmark']" :click-handler="() => followingUsersDialog = false" />
+        <div id="following-users">
+          <AvatarCard v-for="followingUser in followingUsers" :key="followingUser.uid" :user="followingUser" :link="true" />
+          <InfiniteLoading v-if="followingUsersDialog && !followingUsersAccessDenied" :firstLoad="true" target=".users-dialog-container" @infinite="loadMoreFollowingUsers" class="flex justify-content-center py-4">
+            <template #complete>
+              &nbsp;
+            </template>
+          </InfiniteLoading>
+          <div v-if="followingUsersAccessDenied" class="header-meta flex justify-content-center py-4 mb-2">
+            {{ followingUsers.length > 0 ? '只能查看最新 250 个正在关注' : '用户设置了正在关注不可见' }}
+          </div>
+        </div>
+      </div>
+    </Dialog>
+    <Dialog header="Header" v-model:visible="followerUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
+      <div class="users-dialog-container" style="overflow: auto; max-height: 660px;">
+        <TopBar title="关注者" :icon="['fas', 'xmark']" :click-handler="() => followerUsersDialog = false" />
+        <div id="follower-users">
+          <AvatarCard v-for="followerUser in followerUsers" :key="followerUser.uid" :user="followerUser" :link="true" />
+          <InfiniteLoading v-if="followerUsersDialog && !followerUsersAccessDenied" :firstLoad="true" target=".users-dialog-container" @infinite="loadMoreFollowerUsers" class="flex justify-content-center py-4">
+            <template #complete>
+              &nbsp;
+            </template>
+          </InfiniteLoading>
+          <div v-if="followerUsersAccessDenied" class="header-meta flex justify-content-center py-4 mb-2">
+            {{ followerUsers.length > 0 ? '只能查看最新 250 个关注者' : '用户设置了关注者不可见' }}
+          </div>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -265,5 +380,12 @@ const onTabChange = () => {
   line-height: 20px;
   color: #0f1419;
   font-weight: bold;
+}
+.header-stats-link {
+  color: #0f1419;
+  text-decoration: none;
+}
+.header-stats-link:hover, .header-stats-link:active {
+  text-decoration: underline;
 }
 </style>

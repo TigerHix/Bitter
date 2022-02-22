@@ -11,7 +11,7 @@ import TopBar from "./topBar.vue"
 import AvatarCard from "./avatarCard.vue"
 import LikeButton from './likeButton.vue'
 import IconButton from './iconButton.vue'
-import { LikeListReply, LikeListReq } from "../../proto/app/dynamic/v2/dynamic_grpc_web_pb"
+import { LikeListReply, LikeListReq } from "@/proto/app/dynamic/v2/dynamic_pb"
 import { dynamicClient, makeHeaders } from "../../utils/appRequests"
 import { useStore } from 'vuex'
 import PostText from "./postText.vue"
@@ -234,7 +234,7 @@ onMounted(() => {
               ·
             </div>
             <div class="post-timestamp">
-              {{ formatTimeAgo(post.timestamp) }}
+              {{ post.timestampLabel ? post.timestampLabel : formatTimeAgo(post.timestamp) }}
             </div>
           </div>
         </div>
@@ -299,15 +299,25 @@ onMounted(() => {
         </div>
 
         <div v-if="large" class="post-timestamp mt-3">
-          {{ formatTime(post.timestamp) }}
+          {{ post.timestampLabel ? post.timestampLabel : formatTime(post.timestamp) }}
         </div>
 
         <div v-if="large" class="mt-3" />
 
         <div v-if="large && (post.commentCount > 0 || post.repostCount > 0 || post.likeCount > 0)" class="post-stats py-3">
           <span v-if="post.commentCount > 0" style="margin-right: 20px;"><span class="post-stats-number">{{ post.commentCount }}</span> 评论</span>
-          <span v-if="post.repostCount > 0" style="margin-right: 20px;"><span class="post-stats-number">{{ post.repostCount }}</span> 转发</span>
-          <a @click="openLikedUsersDialog()"><span v-if="post.likeCount > 0"><span class="post-stats-number">{{ post.likeCount }}</span> 点赞</span></a>
+          <router-link :to="`/post/${post.id}/reposts`" class="post-stats-link">
+            <span v-if="post.repostCount > 0" style="margin-right: 20px;">
+              <span class="post-stats-number">{{ post.repostCount }}</span>
+              <span style="color: #536471;"> 转发</span>
+            </span>
+          </router-link>
+          <a @click="openLikedUsersDialog()" class="post-stats-link">
+            <span v-if="post.likeCount > 0">
+              <span class="post-stats-number">{{ post.likeCount }}</span>
+              <span style="color: #536471;"> 点赞</span>
+            </span>
+          </a>
         </div>
 
         <div v-if="large" class="post-actions large">
@@ -405,6 +415,13 @@ onMounted(() => {
   color: #536471;
   font-size: 13px;
   font-weight: bold;
+}
+.post-stats-link {
+  color: #0f1419;
+  text-decoration: none;
+}
+.post-stats-link:hover, .post-stats-link:active {
+  text-decoration: underline;
 }
 .post-header.large {
   padding-top: 6px;

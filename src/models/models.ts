@@ -4,6 +4,7 @@ export interface Post {
     type: PostType
 
     timestamp: number
+    timestampLabel?: string
     viewCount: number
     repostCount: number
     commentCount: number
@@ -127,6 +128,7 @@ export interface User {
 
     bio?: string
     following?: boolean
+    secretFollowing?: boolean
     followedBy?: boolean
     specialFollowedBy?: boolean
 

@@ -18,6 +18,7 @@ const props = defineProps({
 });
 const emit = defineEmits(["infinite"]);
 const state = ref("");
+// eslint-disable-next-line vue/no-setup-props-destructure
 const { id, top, target, distance, firstLoad, slots } = props;
 const { identifier } = toRefs(props);
 const params = {

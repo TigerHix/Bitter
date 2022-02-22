@@ -7,6 +7,7 @@ import Login from '../view/login.vue'
 import Timeline from '../view/timeline.vue'
 import Profile from '../view/profile.vue'
 import PostPage from '../view/postPage.vue'
+import RepostsPage from '../view/repostsPage.vue'
 import CommentPage from '../view/commentPage.vue'
 
 import PrimeVue from 'primevue/config'
@@ -42,6 +43,7 @@ const routes = [
   { name: 'timeline', path: '/', component: Timeline },
   { name: 'profile', path: '/profile/:uid', component: Profile, props: true },
   { name: 'post', path: '/post/:postId', component: PostPage, props: true },
+  { name: 'reposts', path: '/post/:postId/reposts', component: RepostsPage, props: true },
   { name: 'comment', path: '/post/:postId/:type/:objectId/:rootId/:threadId?/:targetId?', component: CommentPage, props: true }
 ]
 
@@ -76,6 +78,11 @@ const store = createStore({
         if (!post.likedBy || post.likedBy.length === 0)
           if (cachedPost?.likedBy?.length > 0)
             post.likedBy = cachedPost.likedBy
+        if (cachedPost) {
+          if (cachedPost.timestampLabel && !post.timestampLabel) {
+            cachedPost.timestampLabel = undefined
+          }
+        }
 
         state.cache.posts[post.id] = {
           ...cachedPost,

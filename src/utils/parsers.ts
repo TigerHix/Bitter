@@ -1,4 +1,4 @@
-import { CommentSection, CommentSectionType, Emoticon, Post, PostType } from "@/models/models";
+import {CommentSection, CommentSectionType, Emoticon, Post, PostType, User} from "@/models/models";
 
 export const parseAndFilterPosts = (data: any) => {
   return data
@@ -206,6 +206,28 @@ export const parseUser = (data: any) => {
     avatarUrl: data.info.face,
   };
 };
+
+export const parseDetailedUser = (data: any): User => {
+  const user: User = {
+    uid: data.mid,
+    name: data.uname,
+    avatarUrl: data.face,
+    bio: data.sign
+  }
+  switch (data.attribute) {
+    case 1:
+      user.secretFollowing = true
+      break
+    case 2:
+      user.following = true
+      break
+    case 6:
+      user.following = true
+      user.followedBy = true
+      break
+  }
+  return user
+}
 
 export const parseImage = (data: any) => {
   return {
