@@ -9,6 +9,7 @@ import {RepostListReq} from "@/proto/app/dynamic/v2/dynamic_pb";
 import {convertDynamicItemToPost} from "@/utils/converters";
 import {useStore} from "vuex";
 import {parsePost} from "@/utils/parsers";
+import {fetchDynamicDetail} from "@/utils/webRequests";
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
@@ -24,19 +25,17 @@ const fetchedOriginalPost = ref<boolean>(false)
 const postDeleted = ref<boolean>(false)
 
 // Fetch original post to prevent repeated fetching
-fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${props.postId}`)
-  .then((res) => res.json())
-  .then((data) => {
-    if (!data.data.card) {
-      postDeleted.value = true
-    } else {
-      console.log('Parsing: ')
-      console.log(data)
-      store.commit('cachePost', parsePost(data.data.card))
+fetchDynamicDetail(props.postId, (data: any) => {
+  if (!data.data.card) {
+    postDeleted.value = true
+  } else {
+    console.log('Parsing: ')
+    console.log(data)
+    store.commit('cachePost', parsePost(data.data.card))
 
-      fetchedOriginalPost.value = true
-    }
-  });
+    fetchedOriginalPost.value = true
+  }
+})
 
 const loadMoreReposts = async ($state: any) => {
   if (router.currentRoute.value.fullPath != path) {

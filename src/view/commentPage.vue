@@ -6,6 +6,7 @@ import PostCard from "./components/postCard.vue";
 import TopBar from "./components/topBar.vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
+import {fetchDynamicDetail} from "@/utils/webRequests";
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
@@ -48,14 +49,14 @@ fetch(`https://api.bilibili.com/x/v2/reply/detail?type=${props.type}&oid=${props
     if (abovePost) {
       return Promise.resolve(abovePost)
     } else {
-      return fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${props.postId}`)
-        .then((res) => res.json())
-        .then((data) => {
+      return new Promise((resolve) => {
+        fetchDynamicDetail(props.postId, (data: any) => {
           const fetchedPost = parsePost(data.data.card)
           store.commit('cachePost', fetchedPost)
 
-          return Promise.resolve(fetchedPost)
-        });
+          return resolve(Promise.resolve(fetchedPost))
+        })
+      })
     }
   })
   .then((postObject) => {

@@ -5,7 +5,7 @@ import ColumnCard from "./columnCard"
 import { Post, PostImage, PostType, User } from "./../../models/models"
 import { computed, defineProps, onMounted, ref } from "vue"
 import { formatTimeAgo, formatTime } from "./../../utils/formatTimestamp"
-import { parsePost } from "../../utils/parsers"
+import { fetchDynamicDetail } from "@/utils/webRequests"
 import { RouteLocationRaw, useRouter } from "vue-router";
 import TopBar from "./topBar.vue"
 import AvatarCard from "./avatarCard.vue"
@@ -15,6 +15,7 @@ import { LikeListReply, LikeListReq } from "@/proto/app/dynamic/v2/dynamic_pb"
 import { dynamicClient, makeHeaders } from "../../utils/appRequests"
 import { useStore } from 'vuex'
 import PostText from "./postText.vue"
+import {parsePost} from "@/utils/parsers";
 const router = useRouter()
 const store = useStore()
 
@@ -38,17 +39,16 @@ const post = computed<Post>(() => {
 })
 
 if ((!post.value && props.resolvePostId) || props.updatePost) {
-  fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${props.postId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.data.card) {
-          postDeleted.value = true
-        } else {
-          console.log('Parsing: ')
-          console.log(data)
-          store.commit('cachePost', parsePost(data.data.card))
-        }
-      });
+  fetchDynamicDetail(props.postId, (data: any) => {
+    console.log(data)
+      if (!data.data.card) {
+        postDeleted.value = true
+      } else {
+        console.log('Parsing: ')
+        console.log(data)
+        store.commit('cachePost', parsePost(data.data.card))
+      }
+    })
 }
 
 const isVideoRepost = (post: Post) => {

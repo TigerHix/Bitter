@@ -5,11 +5,12 @@ import { parseCommentSection, parsePost, parseCommentTypeAndObjectId } from "../
 import PostCard from "./postCard.vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex";
+import {fetchDynamicDetail} from "@/utils/webRequests";
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
 
-const props = defineProps({ 
+const props = defineProps({
   postId: { type: String, required: true },
   sort: { type: Number as PropType<CommentSectionSort>, required: false, default: CommentSectionSort.Hot }
 });
@@ -21,25 +22,22 @@ let post: Post = null
 let type = -1
 let oid: any = null
 
-fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${props.postId}`)
+fetchDynamicDetail(props.postId, (data: any) => {
+  post = parsePost(data.data.card)
+  const results = parseCommentTypeAndObjectId(post)
+  type = results[0]
+  oid = results[1]
+  fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
     .then((res) => res.json())
-    .then((data) => {
-        post = parsePost(data.data.card)
-        const results = parseCommentTypeAndObjectId(post)
-        type = results[0]
-        oid = results[1]
-
-        return fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
-    })
-    .then((res) => res.json())
-    .then((data) => {
+      .then((data) => {
         commentSection.value = parseCommentSection(data.data, post)
 
         const fetchedComments = commentSection.value.comments
         fetchedComments.forEach(it => store.commit('cachePost', it))
         comments.value.push(...fetchedComments)
         console.log(commentSection.value)
-    });
+      });
+})
 
 const onShowReplies = (comment: Post) => {
     router.push({ name: 'comment', params: { type: comment.commentType, objectId: comment.commentObjectId, rootId: comment.commentRootId, targetId: comment.id, threadId: comment.commentThreadId }})
@@ -62,7 +60,7 @@ const loadMoreComments = async $state => {
       $state.error()
     } else {
       commentSection.value = parseCommentSection(data.data, post)
-      
+
       const fetchedComments = commentSection.value.comments
       fetchedComments.forEach(it => store.commit('cachePost', it))
       comments.value.push(...fetchedComments)
@@ -86,7 +84,7 @@ const loadMoreComments = async $state => {
         <div v-for="comment in comments" :key="comment.id" class="post-border">
             <ul class="post-ul">
                 <li class="post-li">
-                    <PostCard :postId="comment.id" :resolvePostId="false" :link="true" /> 
+                    <PostCard :postId="comment.id" :resolvePostId="false" :link="true" />
                 </li>
                 <li v-for="chainedComment in comment.chainedPosts" :key="chainedComment.id" class="post-li">
                     <PostCard :postId="chainedComment.id" :resolvePostId="false" :link="true" />

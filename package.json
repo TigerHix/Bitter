@@ -23,6 +23,7 @@
     "primeicons": "^5.0.0",
     "primevue": "^3.11.1",
     "qrcode": "^1.5.0",
+    "simple-rate-limiter": "^0.2.3",
     "timeago.js": "^4.0.2",
     "ts-md5": "^1.2.11",
     "uint8-to-base64": "^0.2.0",
