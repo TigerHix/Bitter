@@ -13,7 +13,7 @@ const onLink = () => window.open(props.video.url, '_blank');
 <template>
   <div class="flex flex-row video-container" :class="{ 'video-container-link': link }" v-on:click.stop="link && onLink()" v-on:click.middle.stop="link && onLink()">
     <div class="video-thumbnail">
-        <img :src="video.thumbnailUrl" />
+        <img :src="video.thumbnailUrl + '@1280w.webp'" />
     </div>
     <div class="video-meta flex flex-column justify-content-center">
         <div class="video-title">{{ video.title }}</div>
@@ -35,9 +35,10 @@ const onLink = () => window.open(props.video.url, '_blank');
   background-color: rgba(0, 0, 0, 0.03);
 }
 .video-thumbnail img {
-    height: 128px;
-    width: auto;
-    border-radius: 16px 0 0 16px;
+  height: 100%;
+  width: 200px;
+  border-radius: 16px 0 0 16px;
+  object-fit: cover;
 }
 .video-meta {
     padding: 12px;

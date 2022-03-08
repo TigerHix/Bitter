@@ -2,9 +2,51 @@ body {
   margin: 0;
 }
 
+.p-tabview .p-tabview-nav .p-tabview-ink-bar {
+  background-color: rgb(251, 114, 153);
+}
+
+.p-highlight .p-tabview-title {
+  color: rgb(251, 114, 153);
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: #ffffff;
+  border-color: transparent;
+  color: transparent;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus {
+  outline: 0 none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.p-radiobutton .p-radiobutton-box.p-highlight {
+  border-color: rgb(251, 114, 153);
+  background: rgb(251, 114, 153);
+}
+
+.p-radiobutton .p-radiobutton-box:not(.p-disabled).p-focus {
+  outline: 0 none;
+  outline-offset: 0;
+  box-shadow: 0 0 0 0.2rem rgba(251, 114, 153, 0.3);
+  border-color: rgb(251, 114, 153);
+}
+
 a.post-link {
   color: rgb(251, 114, 153);
   text-decoration: none;
+}
+
+.p-radiobutton .p-radiobutton-box:not(.p-disabled):not(.p-highlight):hover {
+  border-color: rgba(251, 114, 153, 0.7);
+}
+
+.p-radiobutton .p-radiobutton-box.p-highlight:not(.p-disabled):hover {
+  border-color: rgb(251, 114, 153);
+  background: rgb(251, 114, 153);
+  color: #ffffff;
 }
 
 a.post-link:hover, a.post-link:active {
