@@ -29,8 +29,8 @@ export interface Post {
 
     isAd: boolean
 
-    commentType?: CommentSectionType // type == Comment
-    commentObjectId?: string
+    commentType: CommentSectionType // type == Comment
+    commentObjectId: string
     commentRootId?: string
     commentThreadId?: string
     
@@ -38,9 +38,18 @@ export interface Post {
 }
 
 export interface Emoticon {
-    name: string,
-    text: string,
+    name: string
+    text: string
     url: string
+    isText?: boolean
+}
+
+export interface EmoticonPackage {
+    id: number
+    name: string
+    iconUrl: string
+    emoticons: Emoticon[]
+    large: boolean
 }
 
 export interface PostMention {
@@ -97,6 +106,18 @@ export interface PostColumn {
     shareCount: number
 }
 
+export enum PostType {
+    Comment = -1,
+    Repost = 1,
+    Album = 2,
+    Text = 4,
+    Video = 8,
+    ShortVideo = 16,
+    Column = 64,
+    Live1 = 4201,
+    Live2 = 4308 // or 4201
+}
+
 export interface CommentSection {
     cursor: any // This is such a weird object...
 
@@ -113,6 +134,20 @@ export enum CommentSectionType {
     Album = 11,
     Column = 12,
     Post = 17
+}
+
+export const toCommentSectionType = (postType: PostType): CommentSectionType => {
+    switch (postType) {
+        case PostType.Comment:
+            throw new Error('This should not happen!')
+        case PostType.Repost: return CommentSectionType.Post
+        case PostType.Album: return CommentSectionType.Album
+        case PostType.Text: return CommentSectionType.Post
+        case PostType.Video: return CommentSectionType.Video
+        case PostType.ShortVideo: return CommentSectionType.ShortVideo
+        case PostType.Column: return CommentSectionType.Column
+        case PostType.Live1: case PostType.Live2: return CommentSectionType.Live
+    }
 }
 
 export enum CommentSectionSort {
@@ -140,17 +175,6 @@ export interface User {
     // Me only
     followingGroups?: FollowingGroup[]
     registrationTimestamp?: number
-}
-
-export enum PostType {
-    Comment = -1,
-    Repost = 1, 
-    Album = 2, 
-    Text = 4,
-    Video = 8,
-    ShortVideo = 16,
-    Column = 64,
-    Live = 4308 // or 4201
 }
 
 export interface FollowingGroup {

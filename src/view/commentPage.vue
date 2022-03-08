@@ -7,6 +7,7 @@ import TopBar from "./components/topBar.vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import {fetchDynamicDetail} from "@/utils/webRequests";
+import PostEditor from "@/view/components/postEditor.vue";
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
@@ -167,7 +168,8 @@ const loadMoreComments = async $state => {
             <PostCard :postId="post.id" :link="true" /> 
           </li>
           <li class="post-li" v-if="mainPost" ref="mainPostDiv">
-            <PostCard :postId="mainPost.id" :large="true" /> 
+            <PostCard :postId="mainPost.id" :large="true" />
+            <PostEditor :replyPostId="mainPost.id" />
           </li>
         </ul>
         <div v-if="belowPosts">

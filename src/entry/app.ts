@@ -17,6 +17,11 @@ import Dialog from 'primevue/dialog';
 import RadioButton from 'primevue/radiobutton';
 import TabView from "primevue/tabview";
 import TabPanel from "primevue/tabpanel";
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
+import OverlayPanel from "primevue/overlaypanel";
+import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
 import 'primevue/resources/themes/lara-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
@@ -65,7 +70,7 @@ const store = createStore({
     }
   },
   getters: {
-    getCachedPost: (state: any) => (id: string) => {
+    getCachedPost: (state: any) => (id: string): Post => {
       return state.cache.posts[id]
     }
   },
@@ -112,11 +117,16 @@ app.component('Dialog', Dialog)
 app.component('RadioButton', RadioButton)
 app.component('TabView', TabView)
 app.component('TabPanel', TabPanel)
+app.component('InputText', InputText)
+app.component('Textarea', Textarea)
+app.component('OverlayPanel', OverlayPanel)
+app.component('Toast', Toast)
 app.directive('linkified', linkify)
 app.component("InfiniteLoading", InfiniteLoading);
 app.use(VueTippy, {
   defaultProps: { placement: 'bottom', theme: 'light-border' },
 })
+app.use(ToastService);
 app.use(vue3PhotoPreview);
 import 'tippy.js/dist/tippy.css'
 import "tippy.js/themes/light-border.css";

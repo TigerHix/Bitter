@@ -101,6 +101,7 @@ const selectedGroup = ref<FollowingGroup>()
       </div>
     </div>
   </div>
+  <Toast position="bottom-center" />
 </template>
 
 <style>

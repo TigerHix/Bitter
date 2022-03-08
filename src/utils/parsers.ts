@@ -1,4 +1,12 @@
-import {CommentSection, CommentSectionType, Emoticon, Post, PostType, User} from "@/models/models";
+import {
+  CommentSection,
+  CommentSectionType,
+  Emoticon,
+  Post,
+  PostType,
+  toCommentSectionType,
+  User
+} from "@/models/models";
 
 export const parseAndFilterPosts = (data: any) => {
   return data
@@ -174,6 +182,9 @@ export const parsePost = (data: any): Post => {
     sourcePostId: data.desc.orig_dy_id_str != '0' ? data.desc.orig_dy_id_str : null,
 
     isAd: data.display?.add_on_card_info?.at(0)?.goods_card,
+
+    commentType: toCommentSectionType(type),
+    commentObjectId: data.desc.rid_str,
 
     isPinned: data.extra?.is_space_top === 1
   };

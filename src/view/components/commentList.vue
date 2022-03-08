@@ -29,14 +29,17 @@ fetchDynamicDetail(props.postId, (data: any) => {
   oid = results[1]
   fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
     .then((res) => res.json())
-      .then((data) => {
-        commentSection.value = parseCommentSection(data.data, post)
+    .then((data) => {
+      console.log('Parsing comment section:')
+      console.log(data)
 
-        const fetchedComments = commentSection.value.comments
-        fetchedComments.forEach(it => store.commit('cachePost', it))
-        comments.value.push(...fetchedComments)
-        console.log(commentSection.value)
-      });
+      commentSection.value = parseCommentSection(data.data, post)
+
+      const fetchedComments = commentSection.value.comments
+      fetchedComments.forEach(it => store.commit('cachePost', it))
+      comments.value.push(...fetchedComments)
+      console.log(commentSection.value)
+    });
 })
 
 const onShowReplies = (comment: Post) => {

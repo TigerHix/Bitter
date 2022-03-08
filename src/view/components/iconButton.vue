@@ -4,6 +4,8 @@ import { defineProps, defineExpose, ref } from "vue"
 defineProps({
   icon: { type: Array, required: false, default: () => null },
   src: { type: String, required: false, default: '' },
+  text: { type: String, required: false, default: '' },
+  title: { type: String, required: false, default: undefined },
   color: { type: String, required: false, default: '#0F1419' },
   hoverColor: { type: String, required: false, default: '#0F1419' },
   activeColor: { type: String, required: false, default: '#0F1419' },
@@ -22,10 +24,11 @@ defineExpose({
 
 <template>
   <div class="icon-button flex flex-row justify-content-center align-items-center">
-    <div class="icon-button-icon-container flex justify-content-center align-items-center" :style="{ 'width': size + 'px', 'height': size + 'px' }" >
+    <div class="icon-button-icon-container flex justify-content-center align-items-center" :style="{ 'width': text ? 'unset' : size + 'px', 'height': size + 'px' }" >
       <div ref="iconEl" class="icon-button-icon">
         <font-awesome-icon v-if="icon" :icon="icon" :style="{ 'font-size': fontSize + 'px' }" />
-        <img v-if="src" :src="src" style="width: 100%; height: 100%;" :style="{ padding: padding + 'px'}" />
+        <img v-if="src" :title="title" :src="src" style="width: 100%; height: 100%;" :style="{ padding: padding + 'px'}" />
+        <span v-if="text" :style="{ padding: padding + 'px'}">{{ text }}</span>
       </div>
     </div>
     <slot></slot>
