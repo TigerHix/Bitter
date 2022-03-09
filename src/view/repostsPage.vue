@@ -25,17 +25,18 @@ const fetchedOriginalPost = ref<boolean>(false)
 const postDeleted = ref<boolean>(false)
 
 // Fetch original post to prevent repeated fetching
-fetchDynamicDetail(props.postId, (data: any) => {
-  if (!data.data.card) {
-    postDeleted.value = true
-  } else {
-    console.log('Parsing: ')
-    console.log(data)
-    store.commit('cachePost', parsePost(data.data.card))
+fetchDynamicDetail(props.postId)
+  .then((data: any) => {
+    if (!data.data.card) {
+      postDeleted.value = true
+    } else {
+      console.log('Parsing: ')
+      console.log(data)
+      store.commit('cachePost', parsePost(data.data.card))
 
-    fetchedOriginalPost.value = true
-  }
-})
+      fetchedOriginalPost.value = true
+    }
+  })
 
 const loadMoreReposts = async ($state: any) => {
   if (router.currentRoute.value.fullPath != path) {

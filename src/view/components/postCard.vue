@@ -39,8 +39,9 @@ const post = computed<Post>(() => {
 })
 
 if ((!post.value && props.resolvePostId) || props.updatePost) {
-  fetchDynamicDetail(props.postId, (data: any) => {
-    console.log(data)
+  fetchDynamicDetail(props.postId)
+    .then((data: any) => {
+      console.log(data)
       if (!data.data.card) {
         postDeleted.value = true
       } else {

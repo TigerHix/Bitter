@@ -57,12 +57,13 @@ const load = () => {
           return Promise.resolve(abovePost)
         } else {
           return new Promise((resolve) => {
-            fetchDynamicDetail(props.postId, (data: any) => {
-              const fetchedPost = parsePost(data.data.card)
-              store.commit('cachePost', fetchedPost)
+            fetchDynamicDetail(props.postId)
+              .then((data: any) => {
+                const fetchedPost = parsePost(data.data.card)
+                store.commit('cachePost', fetchedPost)
 
-              return resolve(Promise.resolve(fetchedPost))
-            })
+                return resolve(Promise.resolve(fetchedPost))
+              })
           })
         }
       })

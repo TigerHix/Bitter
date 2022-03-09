@@ -24,25 +24,26 @@ let post: Post | null = null
 let type = -1
 let oid: any = null
 
-fetchDynamicDetail(props.postId, (data: any) => {
-  post = parsePost(data.data.card)
-  const results = parseCommentTypeAndObjectId(post)
-  type = results[0]
-  oid = results[1]
-  fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log('Parsing comment section:')
-      console.log(data)
+fetchDynamicDetail(props.postId)
+  .then((data: any) => {
+    post = parsePost(data.data.card)
+    const results = parseCommentTypeAndObjectId(post)
+    type = results[0]
+    oid = results[1]
+    fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('Parsing comment section:')
+        console.log(data)
 
-      commentSection.value = parseCommentSection(data.data, post!)
+        commentSection.value = parseCommentSection(data.data, post!)
 
-      const fetchedComments = commentSection.value.comments
-      fetchedComments.forEach(it => store.commit('cachePost', it))
-      comments.value.push(...fetchedComments)
-      console.log(commentSection.value)
-    });
-})
+        const fetchedComments = commentSection.value.comments
+        fetchedComments.forEach(it => store.commit('cachePost', it))
+        comments.value.push(...fetchedComments)
+        console.log(commentSection.value)
+      });
+  })
 
 const onShowReplies = (comment: Post) => {
     router.push({ name: 'comment', params: { type: comment.commentType, objectId: comment.commentObjectId, rootId: comment.commentRootId, targetId: comment.id, threadId: comment.commentThreadId }})

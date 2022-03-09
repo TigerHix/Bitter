@@ -1,6 +1,7 @@
 import {User} from "@/models/models";
 
 const limit = require('simple-rate-limiter')
+const promisify = require('util').promisify
 
 export const fetchUser = (mid: number): Promise<User> => Promise.all([
     fetch(`https://api.bilibili.com/x/web-interface/card?mid=${mid}&photo=1`).then((res) => res.json()),
@@ -23,8 +24,10 @@ export const fetchUser = (mid: number): Promise<User> => Promise.all([
     coverUrl: card.data.space.l_img ?? card.data.space.s_img
   }))
 
-export const fetchDynamicDetail = limit((dynamicId: string, callback: any): any => {
+const fetchDynamicDetailRateLimiter = limit((dynamicId: string, callback: any): any => {
   fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=${dynamicId}`)
     .then((res) => res.json())
     .then((data) => callback(data))
 }).to(1).per(500)
+
+export const fetchDynamicDetail = (postId: string): Promise<any> => new Promise((resolve) => fetchDynamicDetailRateLimiter(postId, (data: any) => resolve(data)))
