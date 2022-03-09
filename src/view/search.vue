@@ -9,6 +9,7 @@ import { Post } from '@/models/models';
 import {DynSearchReq} from "@/proto/app/dynamic/v2/dynamic_pb";
 import {dynamicClient, makeHeaders} from "@/utils/appRequests";
 import {convertDynamicItemToPost} from "@/utils/converters";
+import SearchBar from "@/view/components/searchBar.vue";
 
 const router = useRouter();
 const path = router.currentRoute.value.fullPath
@@ -52,6 +53,7 @@ const loadMoreResults = async ($state: any) => {
 
 const pendingQuery = ref(unescape(props.query))
 const onSearch = () => {
+  if (!pendingQuery.value.trim()) return
   router.push('/search/' + escape(pendingQuery.value))
 }
 </script>
@@ -62,10 +64,7 @@ const onSearch = () => {
       <template #content>
         <div style="width: 100%; padding-right: 64px;">
           <form @submit="onSearch">
-            <div class="p-input-filled p-input-icon-left" style="width: 100%;">
-              <i class="pi pi-search"></i>
-              <InputText type="text" v-model="pendingQuery" placeholder="搜索 Bilibili" style="width: 100%;" />
-            </div>
+            <SearchBar v-model="pendingQuery" />
           </form>
         </div>
       </template>

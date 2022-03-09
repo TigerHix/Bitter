@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Avatar from './avatar.vue'
-import { PropType, defineProps } from 'vue';
+import {PropType, defineProps, computed} from 'vue';
 import { User } from '../../models/models';
 import { useRouter } from "vue-router"
 import FollowButton from './followButton.vue';
@@ -9,13 +9,18 @@ const router = useRouter();
 const props = defineProps({
   user: { type: Object as PropType<User>, required: true },
   link: { type: Boolean, required: false, default: false },
-  showFollowButton: { type: Boolean, required: false, default: true }
+  showFollowButton: { type: Boolean, required: false, default: true },
+  showFollowerCount: { type: Boolean, required: false, default: false },
+  horizontalPadding: { type: Number, required: false, default: 16 },
+  verticalPadding: { type: Number, required: false, default: 12 },
 })
 
 const onLink = (newTab: boolean = false) => {
     if (newTab) window.open(router.resolve('/profile/' + props.user.uid).href, '_blank')
     else router.push('/profile/' + props.user.uid)
 }
+
+const padding = computed(() => `${props.verticalPadding}px ${props.horizontalPadding}px`)
 </script>
 
 <template>
@@ -32,9 +37,8 @@ const onLink = (newTab: boolean = false) => {
           {{ user.name }}
         </div>
       </div>
-      <div class="avatar-card-bio">
-        {{ user.bio }}
-      </div>
+      <div class="avatar-card-follower-count" v-if="showFollowerCount"><font-awesome-icon :icon="['fas', 'user']" style="padding-right: 5px; font-size: 11px;"/> {{ user.followerCount }} 关注者</div>
+      <div class="avatar-card-bio" v-else>{{ user.bio }}</div>
     </div>
     <div v-if="showFollowButton" class="flex flex-column justify-content-center" style="padding-left: 16px;">
       <FollowButton :user="user" />
@@ -44,7 +48,7 @@ const onLink = (newTab: boolean = false) => {
 
 <style>
 .avatar-card-container {
-  padding: 12px 16px;
+  padding: v-bind(padding);
 }
 .avatar-card-container-link {
   transition: background-color 0.2s ease-out 0s;
@@ -67,6 +71,14 @@ const onLink = (newTab: boolean = false) => {
   font-size: 15px;
   line-height: 20px;
   color: #0f1419;
+  overflow-wrap: anywhere;
+}
+.avatar-card-follower-count {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  line-height: 20px;
+  color: #536471;
   overflow-wrap: anywhere;
 }
 </style>

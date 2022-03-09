@@ -302,9 +302,10 @@ const openFollowerUsersDialog = () => {
         </div>
       </div>
     </div>
-    <div class="content flex flex-column justify-content-start">
+    <div class="space-around-tab-view content flex flex-column justify-content-start">
       <TabView lazy @tabChange="onTabChange()">
         <TabPanel header="动态">
+          <div class="separator"></div>
           <div v-for="post in posts" :key="post.id" class="post-border">
             <PostCard :postId="post.id" :link="true" />
           </div>
@@ -315,6 +316,7 @@ const openFollowerUsersDialog = () => {
           </InfiniteLoading>
         </TabPanel>
         <TabPanel header="相簿">
+          <div class="separator"></div>
           <div v-for="post in mediaPosts" :key="post.id" class="post-border">
             <PostCard :postId="post.id" :link="true" :resolvePostId="true" />
           </div>
@@ -361,9 +363,15 @@ const openFollowerUsersDialog = () => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .content {
   width: 100%;
+}
+.separator {
+  height: 1px;
+  border-bottom: 1px;
+  border-bottom-color: rgb(239, 243, 244);
+  border-bottom-style: solid;
 }
 .header-meta {
   font-size: 15px;

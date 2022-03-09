@@ -123,7 +123,10 @@ const replyPost = computed<Post>(() => {
 </script>
 
 <template>
-  <div v-if="replyPost" class="flex flex-row justify-content-start" style="padding: 12px 16px;">
+  <div v-if="replyPost" class="flex flex-row justify-content-start" style="padding: 12px 16px;
+    border-bottom: 1px;
+    border-bottom-color: rgb(239, 243, 244);
+    border-bottom-style: solid;">
     <div class="flex flex-column align-items-center" style="margin-right: 14px; height: 100%;">
       <Avatar :user="store.state.user"/>
     </div>
@@ -153,7 +156,7 @@ const replyPost = computed<Post>(() => {
     <TabView lazy scrollable style="width: 325px;">
       <TabPanel v-for="[index, pkg] in emoticonPackages.entries()" :key="pkg.id">
         <template #header>
-          <div class="flex justify-content-center align-items-center" style="width: 36px; height: 36px; padding: 4px;" :style="{'margin-right': (index === emoticonPackages.length - 1 ? 52 : 0) + 'px'}">
+          <div class="flex justify-content-center align-items-center" style="width: 36px; height: 36px; padding: 4px;" :style="{'margin-right': (index === emoticonPackages.length - 1 ? 48 : 0) + 'px'}">
             <img :title="pkg.name" :src="pkg.iconUrl" style="width: 36px; height: 36px; padding: 4px;" />
           </div>
         </template>

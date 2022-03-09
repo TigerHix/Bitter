@@ -1,7 +1,7 @@
-import { DynamicClient } from '../proto/app/dynamic/v2/DynamicServiceClientPb';
+import { DynamicClient } from '@/proto/app/dynamic/v2/DynamicServiceClientPb';
 import { Md5 } from 'ts-md5/dist/md5';
 import { GrpcConfig } from './grpcConfig';
-import {RepostListReq, RepostListRsp} from "@/proto/app/dynamic/v2/dynamic_pb";
+import {FeedClient} from "@/proto/dynamic/interfaces/feed/v1/ApiServiceClientPb";
 
 export enum ClientType {
     iOS, Android
@@ -158,3 +158,4 @@ export const getUserToken = () => {
 }
 
 export const dynamicClient = new DynamicClient('https://grpc.biliapi.net', {}, {})
+export const feedClient = new FeedClient('https://grpc.biliapi.net', {}, {})

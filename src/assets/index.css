@@ -2,15 +2,20 @@ body {
   margin: 0;
 }
 
-.p-inputtext.p-component {
+.space-around-tab-view .p-tabview-nav {
+  justify-content: space-around;
+}
+
+.search-bar .p-inputtext.p-component {
   font-size: 15px;
   color: #0f1419;
   font-weight: normal;
   height: 42px;
   border-radius: 9999px;
+  width: 100%;
 }
 
-.p-input-icon-left > .p-inputtext {
+.p-input-icon-left .p-inputtext {
   padding-left: 56px !important;
 }
 
@@ -18,9 +23,14 @@ body {
   color: rgb(251, 114, 153);
 }
 
+.p-autocomplete-loader.pi.pi-spinner.pi-spin {
+  color: rgb(83, 100, 113);
+}
+
 .p-input-icon-left > i:first-of-type {
   left: 20px;
   color: rgb(83, 100, 113);
+  z-index: 1;
 }
 
 .p-input-icon-left > .p-inputtext {
@@ -190,6 +200,57 @@ li:not(:last-child) .post-bottom-chain {
   margin-top: 4px;
   margin-bottom: -12px;
   background-color: rgb(207, 217, 222);
+}
+
+a.p-tabview-nav-link {
+  text-decoration: none !important;
+}
+
+.p-tabview .p-tabview-nav {
+  background: #ffffff;
+  border: none;
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  border: 3px solid rgb(251, 114, 153);
+  border-width: 0 0 3px 0;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  border-color: transparent;
+  margin-bottom: 1px;
+}
+
+.p-tabview .p-tabview-nav li:not(.p-highlight) .p-tabview-nav-link:hover {
+  border: 3px solid #536471;
+  border-width: 0 0 3px 0;
+}
+
+.p-autocomplete-panel {
+  max-height: calc(80vh - 53px) !important;
+  width: 360px;
+  margin-left: -12px;
+  border-radius: 16px;
+  border: 0;
+  box-shadow: rgb(101 119 134 / 20%) 0px 0px 15px, rgb(101 119 134 / 15%) 0px 0px 3px 1px;
+}
+
+.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item {
+  background: #fff;
+  color: #0f1419;
+}
+
+.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item:hover {
+  background: rgb(247, 249, 249);
+  color: #0f1419;
+}
+
+.p-autocomplete-panel .p-autocomplete-items {
+  padding: 0;
+}
+
+.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item {
+  padding: 0;
 }
 
 .tippy-box[data-theme~='bitter'] {

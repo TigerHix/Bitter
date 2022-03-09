@@ -23,6 +23,7 @@ import Textarea from 'primevue/textarea';
 import OverlayPanel from "primevue/overlaypanel";
 import ToastService from 'primevue/toastservice';
 import Toast from 'primevue/toast';
+import AutoComplete from 'primevue/autocomplete';
 import 'primevue/resources/themes/lara-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
@@ -123,6 +124,7 @@ app.component('InputText', InputText)
 app.component('Textarea', Textarea)
 app.component('OverlayPanel', OverlayPanel)
 app.component('Toast', Toast)
+app.component('AutoComplete', AutoComplete)
 app.directive('linkified', linkify)
 app.component("InfiniteLoading", InfiniteLoading);
 app.use(VueTippy, {

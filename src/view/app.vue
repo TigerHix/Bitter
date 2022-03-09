@@ -6,6 +6,7 @@ import { useStore } from 'vuex';
 import { FollowingGroup, User } from '@/models/models';
 import { range } from '@/utils/helpers';
 import {fetchUser} from "@/utils/webRequests";
+import SearchBar from "@/view/components/searchBar.vue";
 const router = useRouter()
 const store = useStore()
 const mainColumnComponent = ref(null)
@@ -76,6 +77,7 @@ const selectedGroup = ref<FollowingGroup>()
 
 const pendingQuery = ref('')
 const onSearch = () => {
+  if (!pendingQuery.value.trim()) return
   router.push('/search/' + escape(pendingQuery.value))
 }
 </script>
@@ -96,10 +98,7 @@ const onSearch = () => {
       <div v-if="path === `/`" class="sidebar-item">
         <div style="width: 100%;">
           <form @submit="onSearch">
-            <div class="p-input-filled p-input-icon-left" style="width: 100%;">
-              <i class="pi pi-search"></i>
-              <InputText type="text" v-model="pendingQuery" placeholder="搜索 Bilibili" style="width: 100%;" />
-            </div>
+            <SearchBar v-model="pendingQuery" />
           </form>
         </div>
       </div>
