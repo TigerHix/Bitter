@@ -21,8 +21,10 @@ const onBack = () => {
     <IconButton v-if="icon" :icon="icon" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.2)" :size="36" :font-size="18" @click="clickHandler ? clickHandler() : onBack()" style="margin-right: 20px;"/>
     <div class="top-bar-title" style="flex: 1; padding-left: 8px;">
       <div class="flex flex-column align-items-start justify-content-center">
-        <span>{{ title }}</span>
-        <span v-if="subtitle" class="subtitle">{{ subtitle }}</span>
+        <slot name="content">
+          <span>{{ title }}</span>
+          <span v-if="subtitle" class="subtitle">{{ subtitle }}</span>
+        </slot>
       </div>
     </div>
   </div>

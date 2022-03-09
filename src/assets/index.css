@@ -2,6 +2,40 @@ body {
   margin: 0;
 }
 
+.p-inputtext.p-component {
+  font-size: 15px;
+  color: #0f1419;
+  font-weight: normal;
+  height: 42px;
+  border-radius: 9999px;
+}
+
+.p-input-icon-left > .p-inputtext {
+  padding-left: 56px !important;
+}
+
+.pi:has(+ .p-inputtext:enabled:focus) {
+  color: rgb(251, 114, 153);
+}
+
+.p-input-icon-left > i:first-of-type {
+  left: 20px;
+  color: rgb(83, 100, 113);
+}
+
+.p-input-icon-left > .p-inputtext {
+  padding-left: 2.5rem;
+}
+
+.p-inputtext:enabled, .p-inputtext:enabled:hover {
+  border-color: transparent;
+}
+
+.p-inputtext:enabled:focus {
+  box-shadow: none;
+  border-color: rgb(251, 114, 153);
+}
+
 .p-toast .p-toast-message .p-toast-message-content {
   align-items: center;
 }

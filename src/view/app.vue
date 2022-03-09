@@ -73,6 +73,11 @@ const onHome = () => {
 }
 const path = computed(() => router.currentRoute.value.path)
 const selectedGroup = ref<FollowingGroup>()
+
+const pendingQuery = ref('')
+const onSearch = () => {
+  router.push('/search/' + escape(pendingQuery.value))
+}
 </script>
 
 <template>
@@ -88,9 +93,19 @@ const selectedGroup = ref<FollowingGroup>()
       </keep-alive>
     </router-view>
     <div class="flex flex-column sidebar">
+      <div v-if="path === `/`" class="sidebar-item">
+        <div style="width: 100%;">
+          <form @submit="onSearch">
+            <div class="p-input-filled p-input-icon-left" style="width: 100%;">
+              <i class="pi pi-search"></i>
+              <InputText type="text" v-model="pendingQuery" placeholder="搜索 Bilibili" style="width: 100%;" />
+            </div>
+          </form>
+        </div>
+      </div>
       <div v-if="selectedGroup && path === `/`" class="sidebar-item">
         <div class="sidebar-item-header">
-          我的关注
+          动态过滤
         </div>
         <div style="padding: 12px 16px 0;">
           <div v-for="group in store.state.user.followingGroups" :key="group.id" class="field-radiobutton">

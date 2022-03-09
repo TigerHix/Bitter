@@ -30,7 +30,7 @@ const loadMoreResults = async ($state: any) => {
   console.log("Loading more reposts");
 
   try {
-    const req = new DynSearchReq().setKeyword(props.query).setPage(page)
+    const req = new DynSearchReq().setKeyword(unescape(props.query)).setPage(page)
 
     const res = await dynamicClient.dynSearch(req, await makeHeaders())
     const searchInfo = res.getSearchInfo()!
@@ -49,11 +49,27 @@ const loadMoreResults = async ($state: any) => {
     $state.error()
   }
 }
+
+const pendingQuery = ref(unescape(props.query))
+const onSearch = () => {
+  router.push('/search/' + escape(pendingQuery.value))
+}
 </script>
 
 <template>
   <div class="flex flex-column justify-content-start">
-    <TopBar :title="'搜索：' + query" :icon="null" />
+    <TopBar :title="'搜索：' + query">
+      <template #content>
+        <div style="width: 100%; padding-right: 64px;">
+          <form @submit="onSearch">
+            <div class="p-input-filled p-input-icon-left" style="width: 100%;">
+              <i class="pi pi-search"></i>
+              <InputText type="text" v-model="pendingQuery" placeholder="搜索 Bilibili" style="width: 100%;" />
+            </div>
+          </form>
+        </div>
+      </template>
+    </TopBar>
     <div class="content flex flex-column justify-content-start">
       <div v-for="post in posts" :key="post.id" class="post-border">
         <PostCard :postId="post.id" :link="true" />
