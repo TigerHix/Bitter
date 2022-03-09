@@ -13,14 +13,16 @@ const getPostTextHtml = (post: Post) => {
   let textStart = 0
   let mentionPrecedes = false
 
+  const mentions = []
   for (let mentionedUser of post.mentionedUsers) {
     Array.from(html.matchAll(new RegExp('@' + mentionedUser.name, 'g')))
       .map(match => {
-        post.mentions.push({ location: match.index, length: match[0].length, data: mentionedUser.uid.toString() })
+        mentions.push({ location: match.index, length: match[0].length, data: mentionedUser.uid.toString() })
       })
   }
+  mentions.push(...post.mentions)
 
-  for (let mention of post.mentions) {
+  for (let mention of mentions) {
     blocks.value.push({ type: markRaw(Text), props: { context: post, html: (mentionPrecedes ? ' ' : '') + html.substring(textStart, mention.location) }})
     blocks.value.push({ type: markRaw(Avatar), props: { user: { name: html.substring(mention.location + 1, mention.location + mention.length).trim(), uid: parseInt(mention.data) }, mode: 'text' }})
     textStart = mention.location + mention.length

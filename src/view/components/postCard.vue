@@ -287,7 +287,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="post.video && !post.text" class="post-video-container" style="margin-top: 14px;">
+        <div v-if="post.video" class="post-video-container" style="margin-top: 14px;">
           <VideoCard :video="post.video" :link="true" />
         </div>
 

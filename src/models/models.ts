@@ -75,20 +75,21 @@ export interface PostVideo {
 
     title: string
     url: string
-    description: string
-    timestamp: number
-    
-    danmakuCount: number
-    viewCount: number
-    coinCount: number
-    commentCount: number
-    likeCount: number
-    favoriteCount: number
-    shareCount: number
-
-    uploader: User
     thumbnailUrl: string
     duration: number
+
+    uploader?: User
+
+    description?: string
+    timestamp?: number
+    
+    danmakuCount?: number
+    viewCount?: number
+    coinCount?: number
+    commentCount?: number
+    likeCount?: number
+    favoriteCount?: number
+    shareCount?: number
 }
 
 export interface PostColumn {
@@ -98,12 +99,12 @@ export interface PostColumn {
     url: string
     thumbnailUrl: string
 
-    viewCount: number
-    coinCount: number
-    commentCount: number
-    likeCount: number
-    favoriteCount: number
-    shareCount: number
+    viewCount?: number
+    coinCount?: number
+    commentCount?: number
+    likeCount?: number
+    favoriteCount?: number
+    shareCount?: number
 }
 
 export enum PostType {

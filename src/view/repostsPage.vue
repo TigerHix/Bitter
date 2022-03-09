@@ -46,7 +46,6 @@ const loadMoreReposts = async ($state: any) => {
 
   console.log("Loading more reposts");
 
-  // Test
   try {
     const req = new RepostListReq().setDynamicId(props.postId)
     if (offset.value) req.setOffset(offset.value)

@@ -194,14 +194,14 @@ export const parsePost = (data: any): Post => {
     post.album = { id: card.item.id, images: card.item.pictures.map(parseImage) }
   } else if (type == PostType.Video) {
     post.video = parseVideo(card)
-    post.commentCount = post.video.commentCount
+    if (post.video.commentCount) post.commentCount = post.video.commentCount
     if (post.sourcePostId) {
       // Replace with quote text
       post.text = card.dynamic
     }
   } else if (type == PostType.Column) {
     post.column = parseColumn(card)
-    post.commentCount = post.column.commentCount
+    if (post.column.commentCount) post.commentCount = post.column.commentCount
   }
 
   // console.log(post.user.name + ": " + post.text)

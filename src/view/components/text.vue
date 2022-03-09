@@ -7,10 +7,11 @@ const props = defineProps<{ context: Post; html: string }>();
 const processedHtml = computed(() => {
   const post = props.context;
   let html = props.html;
+
   for (let emoticon of post.emoticons) {
     html = html.replaceAll(emoticon.text, `<img src=${emoticon.url} class="post-emoticon" />`)
   }
-  html = html.replace(/(#([^#\n]*)#)/g, (_, p1, p2) => `<a href="https://search.bilibili.com/all?keyword=${p2}&from_source=web_search" class='post-link' target='_blank'>${p1}</a>`)
+  html = html.replace(/(#([^#\n]*)#)/g, (_, p1) => `<a href="app.html#/search/${escape(p1)}" class='post-link'>${p1}</a>`)
   html = html.replaceAll('\n', '<br/>')
   return html;
 });

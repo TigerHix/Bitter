@@ -5,6 +5,7 @@ import App from '../view/app.vue'
 import Test from '../view/test.vue'
 import Login from '../view/login.vue'
 import Timeline from '../view/timeline.vue'
+import Search from '../view/search.vue'
 import Profile from '../view/profile.vue'
 import PostPage from '../view/postPage.vue'
 import RepostsPage from '../view/repostsPage.vue'
@@ -46,6 +47,7 @@ const routes = [
   { name: 'test', path: '/test', component: Test },
   { name: 'login', path: '/login', component: Login },
   { name: 'timeline', path: '/', component: Timeline },
+  { name: 'search', path: '/search/:query', component: Search, props: true },
   { name: 'profile', path: '/profile/:uid', component: Profile, props: true },
   { name: 'post', path: '/post/:postId', component: PostPage, props: true },
   { name: 'reposts', path: '/post/:postId/reposts', component: RepostsPage, props: true },

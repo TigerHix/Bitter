@@ -3,8 +3,8 @@ import { computed, onMounted, ref } from 'vue'
 import IconButton from './components/iconButton.vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
-import { FollowingGroup, User } from '../models/models';
-import { range } from '../utils/helpers';
+import { FollowingGroup, User } from '@/models/models';
+import { range } from '@/utils/helpers';
 import {fetchUser} from "@/utils/webRequests";
 const router = useRouter()
 const store = useStore()
@@ -67,7 +67,7 @@ onMounted(async () => {
 
 const onHome = () => {
   if (router.currentRoute.value.path == '/') {
-    mainColumnComponent.value.refresh()
+    mainColumnComponent.value!.refresh()
   }
   router.push('/')
 }
