@@ -14,14 +14,8 @@ export interface UserToken {
     expires_in: string
 }
 
-export const fetchUserProfile = async (uid: number) => {
-    return await makeRequest('https://app.bilibili.com/x/v2/space', 'get', {
-        vmid: uid
-    })
-}
-
-export const fetchAndParseUserProfile = async (uid: number) => {
-    return fetchUserProfile(uid)
+export const fetchAppSpace = async (uid: number) => {
+    return await makeRequest('https://app.bilibili.com/x/v2/space', 'get', {vmid: uid})
         .then(res => res.json())
         .then(data => {
             data = data.data

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import {computed, defineProps, ref} from "vue"
+import {computed, defineProps, defineEmits, ref} from "vue"
 import {useStore} from "vuex"
 import {useToast} from "primevue/usetoast";
 import Avatar from "./avatar.vue"
 import IconButton from "@/view/components/iconButton.vue"
 import {Emoticon, EmoticonPackage, Post} from "@/models/models";
+import {parseComment} from "@/utils/parsers";
 
+const emit = defineEmits(['submitSuccess'])
 const store = useStore()
 const toast = useToast()
 const postContent = ref('')
@@ -104,6 +106,7 @@ const onSubmit = () => {
             activated.value = false
             postContent.value = ''
             postInputContainer.value.getElementsByTagName('textarea')[0].blur()
+            emit('submitSuccess', parseComment(data.data.reply, replyPost.value.commentType, replyPost.value.commentObjectId))
           } else {
             toast.add({severity: 'error', detail: data.message, life: 3000})
           }

@@ -4,7 +4,6 @@ import { Post } from "./../models/models";
 import { defineProps, PropType } from "vue";
 import CommentList from "./components/commentList.vue";
 import TopBar from "./components/topBar.vue";
-import PostEditor from "@/view/components/postEditor.vue";
 
 defineProps({ 
   postId: { type: String, required: false, default: null },
@@ -18,7 +17,6 @@ defineProps({
     <div class="post-page-container">
       <div>
         <PostCard :postId="postId" :updatePost="true" :large="true" />
-        <PostEditor :replyPostId="postId" />
         <CommentList :postId="postId ?? postObject?.id" />
       </div>
     </div>

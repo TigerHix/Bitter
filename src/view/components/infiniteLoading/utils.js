@@ -21,6 +21,7 @@ const infiniteEventEmitter = (emit, stateHandler) => {
 }
 
 const isVisible = (el, view) => {
+    if (!el || !view) return false;
     const rect = el.getBoundingClientRect();
     const viewRect = view.getBoundingClientRect();
     const rectTop = rect.top - viewRect.top;

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import FollowButton from './followButton.vue';
-import { User } from "./../../models/models"
+import { User } from "@/models/models"
 import { defineProps, PropType } from "vue"
 import { useRouter } from "vue-router"
-import { fetchAndParseUserProfile } from "../../utils/appRequests";
+import {fetchUser} from "@/utils/webRequests";
 const router = useRouter();
 
 const props = defineProps({ 
@@ -21,7 +21,7 @@ const onClick = (newTab: boolean = false) => {
 let fetchedProfile = false
 const onHover = () => {
     if (fetchedProfile) return
-    fetchAndParseUserProfile(props.user.uid)
+    fetchUser(props.user.uid)
         .then((user: any) => {
             Object.assign(props.user, user)
             fetchedProfile = true

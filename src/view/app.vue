@@ -3,9 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import IconButton from './components/iconButton.vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
-import { fetchAndParseUserProfile } from '../utils/appRequests';
 import { FollowingGroup, User } from '../models/models';
 import { range } from '../utils/helpers';
+import {fetchUser} from "@/utils/webRequests";
 const router = useRouter()
 const store = useStore()
 const mainColumnComponent = ref(null)
@@ -20,7 +20,7 @@ chrome.cookies
   })
   .then((cookie) => {
     store.commit('setCsrf', cookie.value);
-    return fetchAndParseUserProfile(store.state.user.uid)
+    return fetchUser(store.state.user.uid)
   })
   .then((user: User) => {
     store.commit('setUser', user)

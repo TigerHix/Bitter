@@ -3,9 +3,11 @@ import { defineProps, PropType, ref } from "vue"
 import { CommentSection, CommentSectionSort, Post } from "../../models/models";
 import { parseCommentSection, parsePost, parseCommentTypeAndObjectId } from "../../utils/parsers"
 import PostCard from "./postCard.vue"
+import PostEditor from "@/view/components/postEditor.vue";
 import { useRouter } from "vue-router"
 import { useStore } from "vuex";
 import {fetchDynamicDetail} from "@/utils/webRequests";
+
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
@@ -18,7 +20,7 @@ const props = defineProps({
 const commentSection = ref<CommentSection>(null)
 const comments = ref<Post[]>([])
 
-let post: Post = null
+let post: Post | null = null
 let type = -1
 let oid: any = null
 
@@ -33,7 +35,7 @@ fetchDynamicDetail(props.postId, (data: any) => {
       console.log('Parsing comment section:')
       console.log(data)
 
-      commentSection.value = parseCommentSection(data.data, post)
+      commentSection.value = parseCommentSection(data.data, post!)
 
       const fetchedComments = commentSection.value.comments
       fetchedComments.forEach(it => store.commit('cachePost', it))
@@ -46,7 +48,7 @@ const onShowReplies = (comment: Post) => {
     router.push({ name: 'comment', params: { type: comment.commentType, objectId: comment.commentObjectId, rootId: comment.commentRootId, targetId: comment.id, threadId: comment.commentThreadId }})
 }
 
-const loadMoreComments = async $state => {
+const loadMoreComments = async ($state: any) => {
   if (router.currentRoute.value.fullPath != path) {
     $state.loaded()
     return;
@@ -62,7 +64,7 @@ const loadMoreComments = async $state => {
       console.log(data)
       $state.error()
     } else {
-      commentSection.value = parseCommentSection(data.data, post)
+      commentSection.value = parseCommentSection(data.data, post!)
 
       const fetchedComments = commentSection.value.comments
       fetchedComments.forEach(it => store.commit('cachePost', it))
@@ -78,10 +80,14 @@ const loadMoreComments = async $state => {
     $state.error()
   }
 };
-
+const onComment = (comment: Post) => {
+  store.commit('cachePost', comment)
+  comments.value.unshift(comment)
+}
 </script>
 
 <template>
+  <PostEditor :replyPostId="postId" @submitSuccess="onComment" />
   <div class="comment-section-container">
     <div v-if="comments">
         <div v-for="comment in comments" :key="comment.id" class="post-border">

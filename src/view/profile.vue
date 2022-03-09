@@ -5,13 +5,13 @@ import AvatarCard from './components/avatarCard.vue'
 import PostCard from "./components/postCard.vue";
 import {parseAndFilterPosts, parseDetailedUser, parseImage} from "@/utils/parsers";
 import { useRouter } from "vue-router";
-import { fetchAndParseUserProfile } from "@/utils/appRequests";
 import FollowButton from "./components/followButton.vue";
 import Avatar from "./components/avatar.vue";
 import TopBar from "./components/topBar.vue";
 import { useStore } from "vuex";
 import { formatYearMonth } from '@/utils/formatTimestamp'
 import {Post, PostType, User} from "@/models/models";
+import {fetchUser} from "@/utils/webRequests";
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
@@ -21,7 +21,7 @@ let posts = ref<Post[]>([]);
 let mediaPosts = ref<Post[]>([]);
 let user = ref<User>();
 
-fetchAndParseUserProfile(props.uid)
+fetchUser(props.uid)
   .then((it: any) => {
     user.value = it
 
