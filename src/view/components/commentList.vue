@@ -85,6 +85,11 @@ const onComment = (comment: Post) => {
   store.commit('cachePost', comment)
   comments.value.unshift(comment)
 }
+const appendReplyTo = (comment: Post, reply: Post) => {
+  console.log('Appending reply')
+  if (!comment.chainedPosts) comment.chainedPosts = []
+  comment.chainedPosts?.push(reply)
+}
 </script>
 
 <template>
@@ -94,19 +99,19 @@ const onComment = (comment: Post) => {
         <div v-for="comment in comments" :key="comment.id" class="post-border">
             <ul class="post-ul">
                 <li class="post-li">
-                    <PostCard :postId="comment.id" :resolvePostId="false" :link="true" />
+                    <PostCard :postId="comment.id" :resolvePostId="false" :link="true" @reply="r => appendReplyTo(comment, r)" />
                 </li>
                 <li v-for="chainedComment in comment.chainedPosts" :key="chainedComment.id" class="post-li">
-                    <PostCard :postId="chainedComment.id" :resolvePostId="false" :link="true" />
+                    <PostCard :postId="chainedComment.id" :resolvePostId="false" :link="true" @reply="r => appendReplyTo(comment, r)" />
                 </li>
                 <div v-if="comment.commentCount > comment.chainedPosts?.length ?? 0" class="post-show-replies flex flex-row px-3 justify-content-center align-items-center" @click="onShowReplies(comment)">
                     <div class="flex flex-column justify-content-between align-items-center" style="width: 48px; height: 16px;">
-                      <div class="post-show-replies-dot" />
-                      <div class="post-show-replies-dot" />
-                      <div class="post-show-replies-dot" />
+                      <div class="dot" />
+                      <div class="dot" />
+                      <div class="dot" />
                     </div>
                     <div style="flex: 1; padding-left: 14px;">
-                      查看更多
+                      显示回复
                     </div>
                 </div>
             </ul>
@@ -141,11 +146,6 @@ const onComment = (comment: Post) => {
 }
 .post-show-replies:hover {
   background-color: rgba(0, 0, 0, 0.03);
-}
-.post-show-replies-dot {
-  height: 2px;
-  width: 2px;
-  background-color: rgb(207, 217, 222);
 }
 .post-username {
   font-size: 15px;

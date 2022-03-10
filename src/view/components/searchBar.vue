@@ -9,7 +9,7 @@ import {useRouter} from "vue-router";
 
 const props = defineProps<{modelValue: string}>()
 const value = ref(props.modelValue)
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'submit'])
 
 const store = useStore()
 const router = useRouter()
@@ -43,12 +43,19 @@ const onItemSelect = (event: any) => {
     router.push('/profile/' + obj.user.uid)
   }
 }
+const onKeyUp = (event: any) => {
+  if (event.key === 'Enter' || event.keyCode === 13) {
+    emit('submit')
+  }
+}
 </script>
 
 <template>
   <div class="search-bar p-input-filled p-input-icon-left" style="width: 100%;">
     <i class="pi pi-search"></i>
-    <AutoComplete :suggestions="suggestions"  @complete="suggest($event)" @item-select="onItemSelect" :field="obj => obj.user ? obj.user.name : obj.query"
+    <AutoComplete :key="$router.currentRoute.value.fullPath"
+                  :suggestions="suggestions"  @complete="suggest($event)" @item-select="onItemSelect" :field="obj => obj.user ? obj.user.name : obj.query"
+                  @keyup="onKeyUp"
                   type="text" v-bind:modelValue="value" v-on:update:modelValue="update($event)" placeholder="搜索 Bilibili" style="width: 100%;">
       <template #item="slotProps">
         <AvatarCard v-if="slotProps.item.user" :user="slotProps.item.user" :link="true" :showFollowerCount="true" :showFollowButton="false" />

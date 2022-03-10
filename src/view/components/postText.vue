@@ -1,16 +1,24 @@
 <script setup lang="ts">
-import { defineProps, markRaw, ref } from 'vue';
+import {defineProps, markRaw, PropType, ref} from 'vue';
 import { Post } from "../../models/models"
 import Avatar from './avatar.vue';
 import Text from './text.vue';
 
-const props = defineProps<{post: Post}>()
-const blocks = ref([])
+const TextType = markRaw(Text)
+const AvatarType = markRaw(Avatar)
+const truncateHtml = require('html-truncate')
 
-const getPostTextHtml = (post: Post) => {
+const props = defineProps({
+  post: { type: Object as PropType<Post>, required: true },
+  truncate: { type: Boolean, required: false, default: false },
+  truncateLength: { type: Number, required: false, default: 140 }
+})
+const blocks = ref<any[]>([])
+
+const parsePostText = (post: Post) => {
   if (!post.text) return ''
   let html = post.text
-  let textStart = 0
+  let textCursor = 0
   let mentionPrecedes = false
 
   const mentions = []
@@ -23,16 +31,33 @@ const getPostTextHtml = (post: Post) => {
   mentions.push(...post.mentions)
 
   for (let mention of mentions) {
-    blocks.value.push({ type: markRaw(Text), props: { context: post, html: (mentionPrecedes ? ' ' : '') + html.substring(textStart, mention.location) }})
-    blocks.value.push({ type: markRaw(Avatar), props: { user: { name: html.substring(mention.location + 1, mention.location + mention.length).trim(), uid: parseInt(mention.data) }, mode: 'text' }})
-    textStart = mention.location + mention.length
+    blocks.value.push({ type: TextType, props: { context: post, html: (mentionPrecedes ? ' ' : '') + html.substring(textCursor, mention.location) }})
+    textCursor = mention.location
+    if (props.truncate && textCursor > props.truncateLength) break
+
+    blocks.value.push({ type: AvatarType, props: { user: { name: html.substring(mention.location + 1, mention.location + mention.length).trim(), uid: parseInt(mention.data) }, mode: 'text' }})
+    textCursor = mention.location + mention.length
+    if (props.truncate && textCursor > props.truncateLength) break
+
     mentionPrecedes = true
   }
-  blocks.value.push({ type: markRaw(Text), props: { context: post, html: html.substring(textStart, html.length) }})
-  return html
+
+  if (!props.truncate || textCursor <= props.truncateLength) {
+    blocks.value.push({type: TextType, props: {context: post, html: html.substring(textCursor, html.length)}})
+    textCursor = html.length
+  }
+  if (props.truncate && textCursor > props.truncateLength) {
+    // Truncate last block
+    const lastBlock = blocks.value[blocks.value.length - 1]
+    if (lastBlock.type === TextType) {
+      lastBlock.props.html = truncateHtml(lastBlock.props.html, lastBlock.props.html.length - (textCursor - props.truncateLength))
+    } else if (lastBlock.type === AvatarType) {
+      blocks.value.push({type: TextType, props: { html: '…' }})
+    }
+  }
 }
 
-getPostTextHtml(props.post)
+parsePostText(props.post)
 </script>
 
 <template>

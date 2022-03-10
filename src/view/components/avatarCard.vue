@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import Avatar from './avatar.vue'
-import {PropType, defineProps, computed} from 'vue';
+import {PropType, defineProps, defineEmits, computed} from 'vue';
 import { User } from '../../models/models';
 import { useRouter } from "vue-router"
 import FollowButton from './followButton.vue';
-const router = useRouter();
+import {useStore} from "vuex";
+const store = useStore()
+const router = useRouter()
+const emit = defineEmits(['click'])
 
 const props = defineProps({
   user: { type: Object as PropType<User>, required: true },
@@ -16,8 +19,9 @@ const props = defineProps({
 })
 
 const onLink = (newTab: boolean = false) => {
-    if (newTab) window.open(router.resolve('/profile/' + props.user.uid).href, '_blank')
-    else router.push('/profile/' + props.user.uid)
+  if (newTab) window.open(router.resolve('/profile/' + props.user.uid).href, '_blank')
+  else router.push('/profile/' + props.user.uid)
+  emit('click')
 }
 
 const padding = computed(() => `${props.verticalPadding}px ${props.horizontalPadding}px`)
@@ -31,16 +35,15 @@ const padding = computed(() => `${props.verticalPadding}px ${props.horizontalPad
     <div class="flex flex-column justify-content-center" style="flex: 1;">
       <div
         class="flex flex-row justify-content-start align-items-center"
-        style="margin-bottom: 4px"
       >
         <div class="avatar-card-name">
           {{ user.name }}
         </div>
       </div>
       <div class="avatar-card-follower-count" v-if="showFollowerCount"><font-awesome-icon :icon="['fas', 'user']" style="padding-right: 5px; font-size: 11px;"/> {{ user.followerCount }} 关注者</div>
-      <div class="avatar-card-bio" v-else>{{ user.bio }}</div>
+      <div class="avatar-card-bio" v-if="user.bio">{{ user.bio }}</div>
     </div>
-    <div v-if="showFollowButton" class="flex flex-column justify-content-center" style="padding-left: 16px;">
+    <div v-if="showFollowButton && user.uid !== store.state.user.uid" class="flex flex-column justify-content-center" style="padding-left: 16px;">
       <FollowButton :user="user" />
     </div>
   </div>
@@ -49,15 +52,13 @@ const padding = computed(() => `${props.verticalPadding}px ${props.horizontalPad
 <style>
 .avatar-card-container {
   padding: v-bind(padding);
-}
-.avatar-card-container-link {
   transition: background-color 0.2s ease-out 0s;
   cursor: pointer;
 }
-.avatar-card-container-link:hover {
+.avatar-card-container:hover {
   background-color: rgba(0, 0, 0, 0.03);
 }
-.avatar-card-container-link:active {
+.avatar-card-container:active {
   background-color: rgba(0, 0, 0, 0.07);
 }
 .avatar-card-name {
@@ -72,6 +73,7 @@ const padding = computed(() => `${props.verticalPadding}px ${props.horizontalPad
   line-height: 20px;
   color: #0f1419;
   overflow-wrap: anywhere;
+  margin-top: 4px;
 }
 .avatar-card-follower-count {
   display: flex;
@@ -80,5 +82,6 @@ const padding = computed(() => `${props.verticalPadding}px ${props.horizontalPad
   line-height: 20px;
   color: #536471;
   overflow-wrap: anywhere;
+  margin-top: 4px;
 }
 </style>

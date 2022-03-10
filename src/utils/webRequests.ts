@@ -8,7 +8,7 @@ export const fetchUser = (mid: number): Promise<User> => Promise.all([
     fetch(`https://api.bilibili.com/x/space/acc/relation?mid=${mid}`).then((res) => res.json())
   ])
   .then(([card, relation]) => ({
-    uid: card.data.card.mid,
+    uid: Number(card.data.card.mid),
     name: card.data.card.name,
     avatarUrl: card.data.card.face,
 

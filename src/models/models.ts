@@ -71,12 +71,12 @@ export interface PostImage {
 
 export interface PostVideo {
     aid: number
-    cid: number
+    cid?: number
 
     title: string
     url: string
     thumbnailUrl: string
-    duration: number
+    duration?: number
 
     uploader?: User
 
@@ -185,4 +185,35 @@ export interface FollowingGroup {
     name: string
     count: number
     users: Map<number, User>
+}
+
+export interface Topic {
+    id: number
+    name: string
+    description: number
+    viewCount: number
+    postCount: number
+    type: string
+}
+
+export enum NotificationType {
+    Like, Reply, At
+}
+
+export interface Notification {
+    id: number
+    timestamp: number
+    type: NotificationType
+
+    likedPost: Post
+    likeCount: number
+    likedUsers: User[]
+
+    repliedPostId: string
+    replyRoot?: Post
+    reply?: Post
+    replyCount: number
+    repliedUsers: User[]
+
+    unread: boolean
 }

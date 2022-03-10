@@ -2,6 +2,23 @@ body {
   margin: 0;
 }
 
+.dot {
+  height: 2px;
+  width: 2px;
+  background-color: rgb(207, 217, 222);
+}
+
+.bottom-separator {
+  border-bottom-color: rgb(239, 243, 244);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.p-dialog.p-component {
+  position: absolute;
+  top: 5%;
+}
+
 .space-around-tab-view .p-tabview-nav {
   justify-content: space-around;
 }
@@ -21,6 +38,11 @@ body {
 
 .pi:has(+ .p-inputtext:enabled:focus) {
   color: rgb(251, 114, 153);
+}
+
+.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight {
+  color: unset;
+  background-color: rgb(247, 249, 249);
 }
 
 .p-autocomplete-loader.pi.pi-spinner.pi-spin {
@@ -63,6 +85,12 @@ body {
   border-radius: 16px 16px 0 0;
 }
 
+.p-tabview-nav-content {
+  border-bottom: 1px;
+  border-bottom-color: rgb(239, 243, 244);
+  border-bottom-style: solid;
+}
+
 .p-overlaypanel {
   border-radius: 16px;
   border: 0;
@@ -74,11 +102,23 @@ body {
 }
 
 .p-tabview .p-tabview-nav-btn.p-link {
-  background: #ffffff;
+  background: none;
   color: rgb(251, 114, 153);
   width: 3rem;
   box-shadow: none;
   border-radius: 0;
+}
+
+.p-tabview button.p-tabview-nav-btn.p-link {
+  background: white;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  padding: 14px 16px 15px 16px;
+}
+
+.top-bar .p-tabview .p-tabview-nav {
+  background: none;
 }
 
 .p-tabview .p-tabview-nav-btn.p-link:focus {
@@ -97,8 +137,12 @@ body {
   color: rgb(251, 114, 153);
 }
 
+.p-tabview .p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+  background: none;
+}
+
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  background: #ffffff;
+  background: none;
   border-color: rgb(251, 114, 153);
   color: rgb(251, 114, 153);
 }
@@ -149,6 +193,10 @@ a:hover, a:active {
   text-decoration: underline;
 }
 
+a.no-underline:hover, a.no-underline:active {
+  text-decoration: none;
+}
+
 .post-emoticon {
   margin: -1px 1px 0 1px;
   display: inline-block; 
@@ -186,7 +234,7 @@ li.post-li {
   padding-inline-start: 0;
 }
 
-li:not(:first-child) .post-top-chain {
+li:not(:first-child) .post-top-chain, .post-top-chain.force {
   height: 8px;
   width: 2px;
   margin-bottom: 4px;
@@ -194,7 +242,7 @@ li:not(:first-child) .post-top-chain {
   background-color: rgb(207, 217, 222);
 }
 
-li:not(:last-child) .post-bottom-chain {
+li:not(:last-child) .post-bottom-chain, .post-bottom-chain.force {
   flex: 1;
   width: 2px;
   margin-top: 4px;
@@ -219,6 +267,7 @@ a.p-tabview-nav-link {
 .p-tabview .p-tabview-nav li .p-tabview-nav-link {
   border-color: transparent;
   margin-bottom: 1px;
+  background: none;
 }
 
 .p-tabview .p-tabview-nav li:not(.p-highlight) .p-tabview-nav-link:hover {

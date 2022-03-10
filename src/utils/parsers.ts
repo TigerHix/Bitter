@@ -4,7 +4,7 @@ import {
   Emoticon,
   Post,
   PostType,
-  toCommentSectionType,
+  toCommentSectionType, Topic,
   User
 } from "@/models/models";
 
@@ -210,13 +210,43 @@ export const parsePost = (data: any): Post => {
   return post;
 };
 
-export const parseUser = (data: any) => {
+export const parseTopic = (data: any): Topic => {
+  return {
+    id: data.id,
+    name: data.name,
+    viewCount: data.view,
+    postCount: data.discuss,
+    description: data.description,
+    type: data.server_info
+  }
+}
+
+export const parseUser = (data: any): User => {
   return {
     uid: data.info.uid,
     name: data.info.uname,
     avatarUrl: data.info.face,
   };
 };
+
+export const parseNotificationUser = (data: any): User => {
+  return {
+    uid: data.mid,
+    name: data.nickname,
+    avatarUrl: data.avatar
+  }
+}
+
+export const parseSearchResultUser = (data: any): User => {
+  return {
+    uid: data.mid,
+    name: data.uname,
+    avatarUrl: data.upic.startsWith('https://') ? data.upic : ('https://' + data.upic),
+    bio: data.usign,
+    followerCount: data.fans
+  };
+};
+
 
 export const parseDetailedUser = (data: any): User => {
   const user: User = {
@@ -225,6 +255,11 @@ export const parseDetailedUser = (data: any): User => {
     avatarUrl: data.face,
     bio: data.sign
   }
+  parseAndSetUserRelation(user, data)
+  return user
+}
+
+export const parseAndSetUserRelation = (user: User, data: any) => {
   switch (data.attribute) {
     case 1:
       user.secretFollowing = true
@@ -237,7 +272,6 @@ export const parseDetailedUser = (data: any): User => {
       user.followedBy = true
       break
   }
-  return user
 }
 
 export const parseImage = (data: any) => {

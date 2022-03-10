@@ -188,14 +188,14 @@ load()
             <PostCard :postId="post.id" :link="true" /> 
           </li>
           <li class="post-li" v-if="mainPost" ref="mainPostDiv">
-            <PostCard :postId="mainPost.id" :large="true" />
+            <PostCard :postId="mainPost.id" :large="true" @reply="r => belowPosts.push(r)" />
             <PostEditor :replyPostId="mainPost.id" @submitSuccess="onComment" />
           </li>
         </ul>
         <div v-if="belowPosts">
           <ul class="post-ul">
             <li v-for="post in belowPosts" :key="post.id" class="post-li">
-              <PostCard :postId="post.id" :link="true" /> 
+              <PostCard :postId="post.id" :link="true" @reply="r => belowPosts.push(r)" />
             </li>
           </ul>
           <InfiniteLoading v-if="loaded" :belowPosts="belowPosts" @infinite="loadMoreComments" class="flex justify-content-center py-4">

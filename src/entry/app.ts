@@ -5,6 +5,8 @@ import App from '../view/app.vue'
 import Test from '../view/test.vue'
 import Login from '../view/login.vue'
 import Timeline from '../view/timeline.vue'
+import Explore from '../view/explore.vue'
+import Notifications from '../view/notifications.vue'
 import Search from '../view/search.vue'
 import Profile from '../view/profile.vue'
 import PostPage from '../view/postPage.vue'
@@ -36,10 +38,10 @@ import "v3-infinite-loading/lib/style.css";
 import 'animate.css';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faMagnifyingGlass as fasMagnifyingGlass, faHeart as fasHeart, faRetweet as fasRetweet, faArrowUpFromBracket as fasArrowUpFromBracket, faHome as fasHome, faHashtag as fasHashtag, faBell as fasBell, faEnvelope as fasEnvelope, faBookmark as fasBookmark, faRectangleList as fasRectangleList, faUser as fasUser, faGear as fasGear, faFeatherPointed as fasFeatherPointed, faArrowLeft as fasArrowLeft, faThumbTack as fasThumbTack, faCalendarDays as fasCalendarDays, faXmark as fasXmark } from '@fortawesome/free-solid-svg-icons'
+import { faMagnifyingGlass as fasMagnifyingGlass, faHeart as fasHeart, faRetweet as fasRetweet, faArrowUpFromBracket as fasArrowUpFromBracket, faHome as fasHome, faHashtag as fasHashtag, faBell as fasBell, faEnvelope as fasEnvelope, faBookmark as fasBookmark, faRectangleList as fasRectangleList, faUser as fasUser, faGear as fasGear, faFeatherPointed as fasFeatherPointed, faArrowLeft as fasArrowLeft, faThumbTack as fasThumbTack, faCalendarDays as fasCalendarDays, faXmark as fasXmark, faComment as fasComment } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as farHeart, faComment as farComment, faFaceSmile as farFaceSmile } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(fasMagnifyingGlass, fasHeart, farHeart, fasRetweet, farComment, fasArrowUpFromBracket, fasHome, fasHashtag, fasBell, fasEnvelope, fasBookmark, fasRectangleList, fasUser, fasGear, fasFeatherPointed, farFaceSmile, fasArrowLeft, fasThumbTack, fasCalendarDays, fasXmark)
+library.add(fasComment, fasMagnifyingGlass, fasHeart, farHeart, fasRetweet, farComment, fasArrowUpFromBracket, fasHome, fasHashtag, fasBell, fasEnvelope, fasBookmark, fasRectangleList, fasUser, fasGear, fasFeatherPointed, farFaceSmile, fasArrowLeft, fasThumbTack, fasCalendarDays, fasXmark)
 import VueTippy from 'vue-tippy'
 import vue3PhotoPreview from 'vue3-photo-preview';
 import 'vue3-photo-preview/dist/index.css';
@@ -48,6 +50,8 @@ const routes = [
   { name: 'test', path: '/test', component: Test },
   { name: 'login', path: '/login', component: Login },
   { name: 'timeline', path: '/', component: Timeline },
+  { name: 'explore', path: '/explore', component: Explore },
+  { name: 'notifications', path: '/notifications', component: Notifications },
   { name: 'search', path: '/search/:query', component: Search, props: true },
   { name: 'profile', path: '/profile/:uid', component: Profile, props: true },
   { name: 'post', path: '/post/:postId', component: PostPage, props: true },

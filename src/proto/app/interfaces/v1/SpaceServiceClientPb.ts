@@ -13,7 +13,7 @@
 
 import * as grpcWeb from 'grpc-web';
 
-import * as bilibili_app_interfaces_v1_space_pb from '../../../../bilibili/app/interfaces/v1/space_pb';
+import * as bilibili_app_interfaces_v1_space_pb from '../../../../proto/app/interfaces/v1/space_pb';
 
 
 export class SpaceClient {

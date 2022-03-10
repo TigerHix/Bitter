@@ -4,14 +4,18 @@ import { User } from "@/models/models"
 import { defineProps, PropType } from "vue"
 import { useRouter } from "vue-router"
 import {fetchUser} from "@/utils/webRequests";
+import {format10k} from "@/utils/formatNumber";
 const router = useRouter();
 
 const props = defineProps({ 
     user: { type: Object as PropType<User>, required: true }, 
     small: { type: Boolean, required: false, default: false }, 
-    large: { type: Boolean, required: false, default: false }, 
+    medium: { type: Boolean, required: false, default: false },
+    large: { type: Boolean, required: false, default: false },
     popup: { type: Boolean, required: false, default: true },
-    mode: { type: String, required: false, default: 'image' }
+    mode: { type: String, required: false, default: 'image' },
+    prependAt: { type: Boolean, required: false, default: true },
+    bold: { type: Boolean, required: false, default: false }
 })
 
 const onClick = (newTab: boolean = false) => {
@@ -46,7 +50,7 @@ const appendToApp = () => document.querySelector(".main-column");
         animation="fade">
         <template #default>
             <slot>
-                <div v-if="mode === 'image'" class="avatar" :class="{ 'small': small, 'large': large }">
+                <div v-if="mode === 'image'" class="avatar" :class="{ 'small': small, 'medium': medium, 'large': large }">
                     <img :src="user.avatarUrl" />
                     <div v-if="popup">
                         <div class="avatar-mask" @click.stop="onClick()" @click.middle.stop="onClick(true)"></div>
@@ -57,7 +61,7 @@ const appendToApp = () => document.querySelector(".main-column");
                 </div>
                 <span v-else-if="mode === 'text'">
                     <router-link @click.stop @click.middle.stop :to="`/profile/${user.uid}`">
-                        <a class="post-link">@{{ user.name }} </a>
+                        <a class="post-link" :style="{ 'font-weight': bold ? 'bold' : 'unset' }">{{ prependAt ? '@' : '' }}{{ user.name }} </a>
                     </router-link>
                 </span>
             </slot>
@@ -86,11 +90,11 @@ const appendToApp = () => document.querySelector(".main-column");
                     </div>
                     <div v-if="user.followingCount != null" class="flex flex-row" style="margin-top: 12px;">
                         <div>
-                            <span class="avatar-popper-stats-number">{{ user.followingCount }} </span>
+                            <span class="avatar-popper-stats-number">{{ format10k(user.followingCount) }} </span>
                             <span class="avatar-popper-stats" style="margin-left: 4px;">正在关注</span>
                         </div>
                         <div style="margin-left: 20px;">
-                            <span class="avatar-popper-stats-number">{{ user.followerCount }}</span>
+                            <span class="avatar-popper-stats-number">{{ format10k(user.followerCount) }}</span>
                             <span class="avatar-popper-stats" style="margin-left: 4px;">关注者</span>
                         </div>
                     </div>
@@ -153,6 +157,10 @@ const appendToApp = () => document.querySelector(".main-column");
 .avatar.small {
     width: 20px;
     height: 20px;
+}
+.avatar.medium {
+    width: 32px;
+    height: 32px;
 }
 .avatar.large {
     width: 64px;

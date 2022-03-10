@@ -12,6 +12,8 @@ import { useStore } from "vuex";
 import { formatYearMonth } from '@/utils/formatTimestamp'
 import {Post, PostType, User} from "@/models/models";
 import {fetchUser} from "@/utils/webRequests";
+import {format10k} from "@/utils/formatNumber";
+
 const router = useRouter()
 const store = useStore()
 const path = router.currentRoute.value.fullPath
@@ -34,18 +36,6 @@ fetchUser(props.uid)
         })
     }
   })
-
-// fetch(
-//     `https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid=${props.uid}&offset_dynamic_id=0&need_top=1&platform=web`
-// )
-//   .then((res) => res.json())
-//   .then((data) => {
-//     console.log(data)
-//     const fetchedPosts = parseAndFilterPosts(data.data.cards)
-//     fetchedPosts.forEach((it: any) => store.commit('cachePost', it))
-//     posts.value = fetchedPosts
-//   });
-
 let initialLoad = true
 
 const loadMorePosts = async ($state: any) => {
@@ -292,11 +282,11 @@ const openFollowerUsersDialog = () => {
         </div>
         <div v-if="user.followingCount != null" class="flex flex-row" style="margin-top: 12px;">
           <a @click="openFollowingUsersDialog()" class="header-stats-link">
-            <span class="header-stats-number">{{ user.followingCount }}&nbsp;</span>
+            <span class="header-stats-number">{{ format10k(user.followingCount) }}&nbsp;</span>
             <span class="header-stats">正在关注</span>
           </a>
           <a @click="openFollowerUsersDialog()" class="header-stats-link" style="margin-left: 20px;">
-              <span class="header-stats-number">{{ user.followerCount }}&nbsp;</span>
+              <span class="header-stats-number">{{ format10k(user.followerCount) }}&nbsp;</span>
               <span class="header-stats">关注者</span>
           </a>
         </div>
@@ -305,7 +295,6 @@ const openFollowerUsersDialog = () => {
     <div class="space-around-tab-view content flex flex-column justify-content-start">
       <TabView lazy @tabChange="onTabChange()">
         <TabPanel header="动态">
-          <div class="separator"></div>
           <div v-for="post in posts" :key="post.id" class="post-border">
             <PostCard :postId="post.id" :link="true" />
           </div>
@@ -316,7 +305,6 @@ const openFollowerUsersDialog = () => {
           </InfiniteLoading>
         </TabPanel>
         <TabPanel header="相簿">
-          <div class="separator"></div>
           <div v-for="post in mediaPosts" :key="post.id" class="post-border">
             <PostCard :postId="post.id" :link="true" :resolvePostId="true" />
           </div>
@@ -328,11 +316,11 @@ const openFollowerUsersDialog = () => {
         </TabPanel>
       </TabView>
     </div>
-    <Dialog header="Header" v-model:visible="followingUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
+    <Dialog header="Header" v-model:visible="followingUsersDialog" :key="'followingUsersDialog' + props.uid" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
       <div class="users-dialog-container" style="overflow: auto; max-height: 660px;">
         <TopBar title="正在关注" :icon="['fas', 'xmark']" :click-handler="() => followingUsersDialog = false" />
         <div id="following-users">
-          <AvatarCard v-for="followingUser in followingUsers" :key="followingUser.uid" :user="followingUser" :link="true" />
+          <AvatarCard v-for="followingUser in followingUsers" :key="followingUser.uid" :user="followingUser" :link="true" @click="followingUsersDialog = false" />
           <InfiniteLoading v-if="followingUsersDialog && !followingUsersAccessDenied" :firstLoad="true" target=".users-dialog-container" @infinite="loadMoreFollowingUsers" class="flex justify-content-center py-4">
             <template #complete>
               &nbsp;
@@ -344,11 +332,11 @@ const openFollowerUsersDialog = () => {
         </div>
       </div>
     </Dialog>
-    <Dialog header="Header" v-model:visible="followerUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
+    <Dialog header="Header" v-model:visible="followerUsersDialog" :key="'followerUsersDialog' + props.uid" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
       <div class="users-dialog-container" style="overflow: auto; max-height: 660px;">
         <TopBar title="关注者" :icon="['fas', 'xmark']" :click-handler="() => followerUsersDialog = false" />
         <div id="follower-users">
-          <AvatarCard v-for="followerUser in followerUsers" :key="followerUser.uid" :user="followerUser" :link="true" />
+          <AvatarCard v-for="followerUser in followerUsers" :key="followerUser.uid" :user="followerUser" :link="true" @click="followerUsersDialog = false" />
           <InfiniteLoading v-if="followerUsersDialog && !followerUsersAccessDenied" :firstLoad="true" target=".users-dialog-container" @infinite="loadMoreFollowerUsers" class="flex justify-content-center py-4">
             <template #complete>
               &nbsp;
@@ -366,12 +354,6 @@ const openFollowerUsersDialog = () => {
 <style scoped>
 .content {
   width: 100%;
-}
-.separator {
-  height: 1px;
-  border-bottom: 1px;
-  border-bottom-color: rgb(239, 243, 244);
-  border-bottom-style: solid;
 }
 .header-meta {
   font-size: 15px;

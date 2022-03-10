@@ -64,6 +64,7 @@ const onEmoticon = (emoticon: Emoticon) => {
   postContent.value = txtarea.value
 }
 
+const submitting = ref(false)
 const onSubmit = () => {
   if (replyPost.value) {
     if (!replyPost.value.commentType) {
@@ -75,6 +76,7 @@ const onSubmit = () => {
       return
     }
 
+    submitting.value = true
     const params: any = {
       oid: replyPost.value.commentObjectId,
       message: postContent.value,
@@ -107,19 +109,26 @@ const onSubmit = () => {
             postContent.value = ''
             postInputContainer.value.getElementsByTagName('textarea')[0].blur()
             emit('submitSuccess', parseComment(data.data.reply, replyPost.value.commentType, replyPost.value.commentObjectId))
+            replyPost.value.commentCount++
           } else {
             toast.add({severity: 'error', detail: data.message, life: 3000})
           }
         })
+        .finally(() => submitting.value = false)
   }
 }
 
 const props = defineProps({
-  replyPostId: { type: String, required: false, default: '' }
+  replyPostId: { type: String, required: false, default: '' },
+  showTopChain: { type: Boolean, required: false, default: false },
+  focused: { type: Boolean, required: false, default: false }
 });
 const replyPost = computed<Post>(() => {
   return props.replyPostId ? store.getters.getCachedPost(props.replyPostId) : null
 })
+if (props.focused) {
+  activated.value = true
+}
 </script>
 
 <template>
@@ -128,12 +137,16 @@ const replyPost = computed<Post>(() => {
     border-bottom-color: rgb(239, 243, 244);
     border-bottom-style: solid;">
     <div class="flex flex-column align-items-center" style="margin-right: 14px; height: 100%;">
+      <div :class="{'post-top-chain': showTopChain, 'force': showTopChain}"></div>
       <Avatar :user="store.state.user"/>
     </div>
     <div style="flex: 1;">
       <div class="flex flex-row align-items-center">
         <div ref="postInputContainer" class="post-input" style="flex: 1;">
-          <Textarea v-model="postContent" placeholder="发布你的回复" :autoResize="true" rows="1" @focus="activated = true" />
+          <Textarea v-model="postContent" placeholder="发布你的回复" :autoResize="true" rows="1"
+                    :autofocus="focused"
+                    @focus="activated = true"
+                    @keyup.ctrl.enter="onSubmit" />
         </div>
         <div v-if="!activated">
           <Button :label="'回复'" :disabled="true" class="p-button-rounded large primary disabled" />
@@ -147,7 +160,7 @@ const replyPost = computed<Post>(() => {
           <IconButton :icon="['far', 'face-smile']" color="rgb(251, 114, 153)" hoverColor="rgb(251, 114, 153)" activeColor="rgb(251, 114, 153)" hoverBackgroundColor="rgba(251, 114, 153, 0.1)" activeBackgroundColor="rgba(251, 114, 153, 0.1)" @click="onEmoticonKeyboard" />
         </div>
         <div>
-          <Button :label="'回复'" :disabled="!postContent" class="p-button-rounded large primary" @click="onSubmit" />
+          <Button :label="'回复'" :disabled="!postContent || submitting" class="p-button-rounded large primary" @click="onSubmit" />
         </div>
       </div>
     </div>

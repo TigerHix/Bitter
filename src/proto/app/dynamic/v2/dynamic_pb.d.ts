@@ -1,7 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as google_protobuf_any_pb from 'google-protobuf/google/protobuf/any_pb';
-import * as bilibili_app_archive_middleware_v1_preload_pb from '../../../../bilibili/app/archive/middleware/v1/preload_pb';
+import * as bilibili_app_archive_middleware_v1_preload_pb from '../../../../proto/app/archive/middleware/v1/preload_pb';
 
 
 export class AdParam extends jspb.Message {

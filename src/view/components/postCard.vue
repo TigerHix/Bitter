@@ -2,22 +2,27 @@
 import Avatar from "./avatar"
 import VideoCard from "./videoCard"
 import ColumnCard from "./columnCard"
-import { Post, PostImage, PostType, User } from "./../../models/models"
-import { computed, defineProps, onMounted, ref } from "vue"
-import { formatTimeAgo, formatTime } from "./../../utils/formatTimestamp"
-import { fetchDynamicDetail } from "@/utils/webRequests"
-import { RouteLocationRaw, useRouter } from "vue-router";
+import {Post, PostImage, PostType, User} from "./../../models/models"
+import {computed, defineEmits, defineProps, onMounted, ref} from "vue"
+import {formatTime, formatTimeAgo} from "./../../utils/formatTimestamp"
+import {format10k} from "@/utils/formatNumber";
+import {fetchDynamicDetail} from "@/utils/webRequests"
+import {RouteLocationRaw, useRouter} from "vue-router";
 import TopBar from "./topBar.vue"
 import AvatarCard from "./avatarCard.vue"
 import LikeButton from './likeButton.vue'
 import IconButton from './iconButton.vue'
-import { LikeListReply, LikeListReq } from "@/proto/app/dynamic/v2/dynamic_pb"
-import { dynamicClient, makeHeaders } from "../../utils/appRequests"
-import { useStore } from 'vuex'
+import {LikeListReply, LikeListReq} from "@/proto/app/dynamic/v2/dynamic_pb"
+import {dynamicClient, makeHeaders} from "../../utils/appRequests"
+import {useStore} from 'vuex'
 import PostText from "./postText.vue"
 import {parsePost} from "@/utils/parsers";
+import PostEditor from "@/view/components/postEditor.vue";
+import {useToast} from "primevue/usetoast";
+
 const router = useRouter()
 const store = useStore()
+const toast = useToast()
 
 const removeRouterGuard = router.beforeEach(() => {
   likedUsersDialog.value = false
@@ -26,13 +31,20 @@ const removeRouterGuard = router.beforeEach(() => {
 
 const props = defineProps({ 
   postId: { type: String, required: true },
+  parentPostId: { type: String, required: false, default: undefined }, // If comment
   resolvePostId: { type: Boolean, required: false, default: true },
   updatePost: { type: Boolean, required: false, default: false },
   embedded: { type: Boolean, required: false, default: false },
+  showMedia: { type: Boolean, required: false, default: true },
+  showActions: { type: Boolean, required: false, default: true },
   large: { type: Boolean, required: false, default: false },
   link: { type: Boolean, required: false, default: false },
-  noPadding: { type: Boolean, required: false, default: false }
+  noPadding: { type: Boolean, required: false, default: false },
+  showTopChain: { type: Boolean, required: false, default: null },
+  showBottomChain: { type: Boolean, required: false, default: null },
+  truncateText: { type: Boolean, required: false, default: false }
 });
+const emit = defineEmits(['reply'])
 let postDeleted = ref(false)
 const post = computed<Post>(() => {
   return store.getters.getCachedPost(props.postId)
@@ -80,7 +92,7 @@ const onLink = (newTab: boolean = false) => {
   const p = post.value
   let args: RouteLocationRaw
   if (p.type === PostType.Comment) {
-    args = { name: 'comment', params: { type: p.commentType, objectId: p.commentObjectId, rootId: p.commentRootId, targetId: p.id, threadId: p.commentThreadId }}
+    args = { name: 'comment', params: { postId: props.parentPostId, type: p.commentType, objectId: p.commentObjectId, rootId: p.commentRootId, targetId: p.id, threadId: p.commentThreadId }}
   } else {
     args = { name: 'post', params: { postId: p.id }}
   }
@@ -90,6 +102,7 @@ const onLink = (newTab: boolean = false) => {
     router.push(args)
     if (p.type !== PostType.Comment) {
       const remove = router.afterEach(() => {
+        console.log('Scroll to top')
         window.scrollTo(0, 0)
         remove()
       })
@@ -142,6 +155,11 @@ const loadMoreLikedUsers = async $state => {
   }
 }
 const openLikedUsersDialog = () => {
+  if (post.value.type == PostType.Comment) {
+    toast.add({severity: 'error', detail: '暂不支持查看评论的点赞列表。', life: 3000})
+    return
+  }
+
   likedUsersDialog.value = true
   loadMoreLikedUsers({ error: () => {}, loaded: () => {}, complete: () => {} })
 }
@@ -151,6 +169,16 @@ const postContainer = ref(null)
 onMounted(() => {
   if (postContainer.value) postContainer.value.onmousedown = function(e) { if (e.button === 1 && props.link) return false; }
 })
+
+// Direct reply
+const replyDialog = ref(false)
+const onReply = (reply: Post) => {
+  replyDialog.value = false
+  store.commit('cachePost', reply)
+  emit('reply', reply)
+}
+const openReplyDialog = () => replyDialog.value = true
+
 </script>
 
 <template>
@@ -203,9 +231,9 @@ onMounted(() => {
     <div v-else class="flex flex-row justify-content-start">
       <div v-if="!large && !embedded">
         <div class="flex flex-column align-items-center" style="margin-right: 14px; height: 100%;">
-          <div class="post-top-chain"></div>
+          <div :class="{ 'post-top-chain': showTopChain !== false, 'force': showTopChain === true}"></div>
           <Avatar :user="post.user" />
-          <div class="post-bottom-chain"></div>
+          <div :class="{ 'post-bottom-chain': showBottomChain !== false, 'force': showBottomChain === true}"></div>
         </div>
       </div>
       <div style="flex: 1;">
@@ -220,7 +248,7 @@ onMounted(() => {
           </div>
           <div v-if="large">
             <div class="flex flex-column align-items-center" style="margin-right: 16px; height: 48px">
-              <div class="post-top-chain"></div>
+              <div :class="{ 'post-top-chain': showTopChain !== false, 'force': showTopChain === true}"></div>
               <Avatar :user="post.user" />
             </div>
           </div>
@@ -241,62 +269,64 @@ onMounted(() => {
         </div>
         
         <div class="post-text" :class="{ 'large': large }">
-          <PostText :post="post" />
+          <PostText :post="post" :truncate="truncateText" />
         </div>
 
-        <div v-if="post.album" style="margin-top: 14px;">
-          <div v-if="post.album.images.length == 1">
-            <div class="post-single-image-container" @click.stop>
-              <photo-provider :default-backdrop-opacity="0.9">
-                <photo-consumer :src="post.album.images[0].url">
-                  <img :src="getSingleImageThumbnail(post.album.images[0])" />
-                </photo-consumer>
-              </photo-provider>
-            </div>
-          </div>
-          <div v-else-if="post.album.images.length == 2">
-            <div class="flex flex-row">
-              <div class="post-double-image-container left" @click.stop>
+        <div v-if="showMedia">
+          <div v-if="post.album" style="margin-top: 14px;">
+            <div v-if="post.album.images.length == 1">
+              <div class="post-single-image-container" @click.stop>
                 <photo-provider :default-backdrop-opacity="0.9">
-                  <photo-consumer v-for="(src, index) in post.album.images.map(it => it.url)" :key="index" :src="src">
-                    <img v-if="index === 0" :src="getDoubleImageThumbnail(post.album.images[0])" />
-                  </photo-consumer>
-                </photo-provider>
-              </div>
-              <div class="post-double-image-container right" @click.stop>
-                <photo-provider :default-backdrop-opacity="0.9">
-                  <photo-consumer v-for="(src, index) in post.album.images.map(it => it.url)" :key="index" :src="src">
-                    <img v-if="index === 1" :src="getDoubleImageThumbnail(post.album.images[1])" />
+                  <photo-consumer :src="post.album.images[0].url">
+                    <img :src="getSingleImageThumbnail(post.album.images[0])" />
                   </photo-consumer>
                 </photo-provider>
               </div>
             </div>
-          </div>
-          <div v-else>
-            <div class="grid px-2 py-2">
-              <div v-for="(image, index) in post.album.images" :key="image.url" class="col-4 p-0">
-                <div class="post-triple-image-container" :class="{ 'large': large }" @click.stop>
+            <div v-else-if="post.album.images.length == 2">
+              <div class="flex flex-row">
+                <div class="post-double-image-container left" @click.stop>
                   <photo-provider :default-backdrop-opacity="0.9">
-                    <photo-consumer v-for="(src, index2) in post.album.images.map(it => it.url)" :key="index2" :src="src">
-                      <img v-if="index === index2" :src="getTripleImageThumbnail(image)" />
+                    <photo-consumer v-for="(src, index) in post.album.images.map(it => it.url)" :key="index" :src="src">
+                      <img v-if="index === 0" :src="getDoubleImageThumbnail(post.album.images[0])" />
+                    </photo-consumer>
+                  </photo-provider>
+                </div>
+                <div class="post-double-image-container right" @click.stop>
+                  <photo-provider :default-backdrop-opacity="0.9">
+                    <photo-consumer v-for="(src, index) in post.album.images.map(it => it.url)" :key="index" :src="src">
+                      <img v-if="index === 1" :src="getDoubleImageThumbnail(post.album.images[1])" />
                     </photo-consumer>
                   </photo-provider>
                 </div>
               </div>
             </div>
+            <div v-else>
+              <div class="grid px-2 py-2">
+                <div v-for="(image, index) in post.album.images" :key="image.url" class="col-4 p-0">
+                  <div class="post-triple-image-container" :class="{ 'large': large }" @click.stop>
+                    <photo-provider :default-backdrop-opacity="0.9">
+                      <photo-consumer v-for="(src, index2) in post.album.images.map(it => it.url)" :key="index2" :src="src">
+                        <img v-if="index === index2" :src="getTripleImageThumbnail(image)" />
+                      </photo-consumer>
+                    </photo-provider>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div v-if="post.video" class="post-video-container" style="margin-top: 14px;">
-          <VideoCard :video="post.video" :link="true" />
-        </div>
+          <div v-if="post.video" class="post-video-container" style="margin-top: 14px;">
+            <VideoCard :video="post.video" :link="true" />
+          </div>
 
-        <div v-if="post.column" class="post-column-container" style="margin-top: 14px;">
-          <ColumnCard :column="post.column" :link="true" />
-        </div>
+          <div v-if="post.column" class="post-column-container" style="margin-top: 14px;">
+            <ColumnCard :column="post.column" :link="true" />
+          </div>
 
-        <div v-if="post.sourcePostId" class="post-embedded-post-container" style="margin-top: 14px; border-radius: 16px;">
-          <PostCard :postId="post.sourcePostId" :embedded="true" :link="true" />
+          <div v-if="post.sourcePostId" class="post-embedded-post-container" style="margin-top: 14px; border-radius: 16px;">
+            <PostCard :postId="post.sourcePostId" :embedded="true" :link="true" />
+          </div>
         </div>
 
         <div v-if="large" class="post-timestamp mt-3">
@@ -306,65 +336,72 @@ onMounted(() => {
         <div v-if="large" class="mt-3" />
 
         <div v-if="large && (post.commentCount > 0 || post.repostCount > 0 || post.likeCount > 0)" class="post-stats py-3">
-          <span v-if="post.commentCount > 0" style="margin-right: 20px;"><span class="post-stats-number">{{ post.commentCount }}</span> 评论</span>
+          <span v-if="post.commentCount > 0" style="margin-right: 20px;"><span class="post-stats-number">{{ format10k(post.commentCount) }}</span> 评论</span>
           <router-link :to="`/post/${post.id}/reposts`" class="post-stats-link">
             <span v-if="post.repostCount > 0" style="margin-right: 20px;">
-              <span class="post-stats-number">{{ post.repostCount }}</span>
+              <span class="post-stats-number">{{ format10k(post.repostCount) }}</span>
               <span style="color: #536471;"> 转发</span>
             </span>
           </router-link>
           <a @click="openLikedUsersDialog()" class="post-stats-link">
             <span v-if="post.likeCount > 0">
-              <span class="post-stats-number">{{ post.likeCount }}</span>
+              <span class="post-stats-number">{{ format10k(post.likeCount) }}</span>
               <span style="color: #536471;"> 点赞</span>
             </span>
           </a>
         </div>
 
-        <div v-if="large" class="post-actions large">
-          <div class="grid m-0 w-100 h-100" style="padding: 4px;">
-            <div class="col-3 p-0 flex justify-content-center align-items-center">
-              <font-awesome-icon :icon="['far', 'comment']" />
+        <div v-if="showActions">
+          <div v-if="large" class="post-actions large">
+            <div class="grid m-0 w-100 h-100" style="padding: 4px;">
+              <div class="col-3 p-0 flex justify-content-center align-items-center">
+                <a class="no-underline" @click.stop="openReplyDialog()">
+                  <font-awesome-icon :icon="['far', 'comment']" />
+                </a>
+              </div>
+              <div class="col-3 p-0 flex justify-content-center align-items-center">
+                <font-awesome-icon :icon="['fas', 'retweet']" />
+              </div>
+              <div class="col-3 p-0 flex justify-content-center align-items-center">
+                <LikeButton :post="post" :size="40" :fontSize="20" />
+              </div>
+              <div class="col-3 p-0 flex justify-content-center align-items-center">
+                <font-awesome-icon :icon="['fas', 'arrow-up-from-bracket']" />
+              </div>
             </div>
-            <div class="col-3 p-0 flex justify-content-center align-items-center">
-              <font-awesome-icon :icon="['fas', 'retweet']" />
-            </div>
-            <div class="col-3 p-0 flex justify-content-center align-items-center">
-              <LikeButton :post="post" :size="40" :fontSize="20" />
-            </div>
-            <div class="col-3 p-0 flex justify-content-center align-items-center">
-              <font-awesome-icon :icon="['fas', 'arrow-up-from-bracket']" />
+          </div>
+          <div v-else-if="!embedded" class="post-actions" style="height: 34px;">
+            <div class="grid m-0 w-100 h-100" style="padding-top: 6px; margin-bottom: -12px;">
+              <div class="col-3 p-0 flex justify-content-start align-items-center post-action-comment">
+                <a class="no-underline" @click.stop="openReplyDialog()">
+                  <IconButton :icon="['far', 'comment']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(29, 155, 240)" activeColor="rgb(29, 155, 240)" hoverBackgroundColor="rgba(29, 155, 240, 0.1)" activeBackgroundColor="rgba(29, 155, 240, 0.2)">
+                    <span v-if="post.commentCount > 0" class="post-action-count">{{ format10k(post.commentCount) }}</span>
+                  </IconButton>
+                </a>
+              </div>
+              <div class="col-3 p-0 flex justify-content-start align-items-center post-action-repost">
+                <IconButton :icon="['fas', 'retweet']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(0, 186, 124)" activeColor="rgb(0, 186, 124)" hoverBackgroundColor="rgba(0, 186, 124, 0.1)" activeBackgroundColor="rgba(0, 186, 124, 0.2)">
+                  <span v-if="post.repostCount > 0" class="post-action-count">{{ format10k(post.repostCount) }}</span>
+                </IconButton>
+              </div>
+              <div class="col-3 p-0 flex justify-content-start align-items-center post-action-like">
+                <LikeButton :post="post" :size="36" :fontSize="18">
+                  <span v-if="post.likeCount > 0" class="post-action-count">{{ format10k(post.likeCount) }}</span>
+                </LikeButton>
+              </div>
+              <div class="col-3 p-0 flex justify-content-start align-items-center">
+                <IconButton :icon="['fas', 'arrow-up-from-bracket']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(29, 155, 240)" activeColor="rgb(29, 155, 240)" hoverBackgroundColor="rgba(29, 155, 240, 0.1)" activeBackgroundColor="rgba(29, 155, 240, 0.2)">
+                </IconButton>
+              </div>
             </div>
           </div>
         </div>
-        <div v-else-if="!embedded" class="post-actions" style="height: 34px;">
-          <div class="grid m-0 w-100 h-100" style="padding-top: 6px; margin-bottom: -12px;">
-            <div class="col-3 p-0 flex justify-content-start align-items-center post-action-comment">
-              <IconButton :icon="['far', 'comment']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(29, 155, 240)" activeColor="rgb(29, 155, 240)" hoverBackgroundColor="rgba(29, 155, 240, 0.1)" activeBackgroundColor="rgba(29, 155, 240, 0.2)">
-                <span v-if="post.commentCount > 0" class="post-action-count">{{ post.commentCount }}</span>
-              </IconButton>
-            </div>
-            <div class="col-3 p-0 flex justify-content-start align-items-center post-action-repost">
-              <IconButton :icon="['fas', 'retweet']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(0, 186, 124)" activeColor="rgb(0, 186, 124)" hoverBackgroundColor="rgba(0, 186, 124, 0.1)" activeBackgroundColor="rgba(0, 186, 124, 0.2)">
-                <span v-if="post.repostCount > 0" class="post-action-count">{{ post.repostCount }}</span>
-              </IconButton>
-            </div>
-            <div class="col-3 p-0 flex justify-content-start align-items-center post-action-like">
-              <LikeButton :post="post" :size="36" :fontSize="18">
-                <span v-if="post.likeCount > 0" class="post-action-count">{{ post.likeCount }}</span>
-              </LikeButton>
-            </div>
-            <div class="col-3 p-0 flex justify-content-start align-items-center">
-              <IconButton :icon="['fas', 'arrow-up-from-bracket']" :size="36" :fontSize="18" color="rgb(83, 100, 113)" hoverColor="rgb(29, 155, 240)" activeColor="rgb(29, 155, 240)" hoverBackgroundColor="rgba(29, 155, 240, 0.1)" activeBackgroundColor="rgba(29, 155, 240, 0.2)">
-              </IconButton>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   </div>
 
-  <Dialog header="Header" v-model:visible="likedUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
+  <Dialog v-model:visible="likedUsersDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
     <div class="liked-users-dialog-container" style="overflow: auto; max-height: 660px;">
       <TopBar title="点赞者" :icon="['fas', 'xmark']" :click-handler="() => likedUsersDialog = false" />
       <div id="liked-users">
@@ -375,6 +412,14 @@ onMounted(() => {
           </template>
         </InfiniteLoading>
       </div>
+    </div>
+  </Dialog>
+
+  <Dialog v-model:visible="replyDialog" :dismissableMask="true" :closable="true" :show-header="false" :draggable="false" :modal="true">
+    <div class="reply-dialog-container">
+      <TopBar :icon="['fas', 'xmark']" :click-handler="() => replyDialog = false" />
+      <PostCard :postId="postId" :showActions="false" :showMedia="false" :link="false" :showBottomChain="true" :truncateText="true" />
+      <PostEditor :replyPostId="postId" :showTopChain="true" @submitSuccess="onReply" :focused="true" />
     </div>
   </Dialog>
 </template>
@@ -471,6 +516,7 @@ onMounted(() => {
 .post-action-count {
   padding: 0 4px;
   font-size: 13px;
+  text-decoration: none !important;
 }
 .post-stats-number {
   color: #0f1419;

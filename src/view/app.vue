@@ -71,6 +71,19 @@ const onHome = () => {
     mainColumnComponent.value!.refresh()
   }
   router.push('/')
+  window.scrollTo(0, 0)
+}
+const onExplore = () => {
+  router.push(`/explore`)
+  window.scrollTo(0, 0)
+}
+const onNotifications = () => {
+  router.push(`/notifications`)
+  window.scrollTo(0, 0)
+}
+const onProfile = () => {
+  router.push(`/profile/${store.state.user.uid}`)
+  window.scrollTo(0, 0)
 }
 const path = computed(() => router.currentRoute.value.path)
 const selectedGroup = ref<FollowingGroup>()
@@ -87,7 +100,9 @@ const onSearch = () => {
     <div class="flex flex-column navigation align-items-center justify-content-center">
       <IconButton src="logo.png" hoverBackgroundColor="rgba(251, 114, 153, 0.1)" activeBackgroundColor="rgba(251, 114, 153, 0.1)" :size="50" :padding="4" @click="onHome()" class="navigation-icon" />
       <IconButton :icon="['fas', 'home']" :color="path === '/' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onHome()" class="navigation-icon" />
-      <IconButton v-if="store.state.user" :icon="['fas', 'user']" :color="path === `/profile/${store.state.user.uid}` ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="router.push(`/profile/${store.state.user.uid}`)" class="navigation-icon" />
+      <IconButton :icon="['fas', 'hashtag']" :color="path === '/explore' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onExplore()" class="navigation-icon" />
+      <IconButton :icon="['fas', 'bell']" :color="path === '/notifications' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onNotifications()" class="navigation-icon" />
+      <IconButton v-if="store.state.user" :icon="['fas', 'user']" :color="path === `/profile/${store.state.user.uid}` ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onProfile()" class="navigation-icon" />
     </div>
     <router-view v-if="authenticated" id="mainColumn" class="flex main-column" v-slot="{ Component }">
       <keep-alive>
@@ -98,7 +113,7 @@ const onSearch = () => {
       <div v-if="path === `/`" class="sidebar-item">
         <div style="width: 100%;">
           <form @submit="onSearch">
-            <SearchBar v-model="pendingQuery" />
+            <SearchBar v-model="pendingQuery" @submit="onSearch" />
           </form>
         </div>
       </div>
