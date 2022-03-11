@@ -31,12 +31,20 @@ let threshold = 10
 let firstLoad = true
 
 const loadMorePosts = async ($state: any, signal: any = null) => {
+  console.log("Loading more posts");
+
   if (router.currentRoute.value.fullPath != path) {
     $state.loaded()
     return;
   }
 
   console.log("Loading more posts");
+
+  if (!signal) {
+    loadMoreAbortController?.abort()
+    loadMoreAbortController = new AbortController()
+    signal = loadMoreAbortController.signal
+  }
 
   if (firstLoad) {
     console.log('First load')
@@ -62,20 +70,13 @@ const loadMorePosts = async ($state: any, signal: any = null) => {
         threshold -= groupFilteredPosts.length
         console.log('FETCH AGAIN, threshold: ' + threshold)
         await loadMorePosts($dummyState, signal)
-        return
       }
       threshold = 10
-      console.log('loaded')
       $state.loaded()
     }
     return
   }
 
-  if (!signal) {
-    loadMoreAbortController?.abort()
-    loadMoreAbortController = new AbortController()
-    signal = loadMoreAbortController.signal
-  }
   try {
     console.log('Subsequent load')
     const offset = posts.value[posts.value.length - 1].id
@@ -98,10 +99,8 @@ const loadMorePosts = async ($state: any, signal: any = null) => {
         threshold -= groupFilteredPosts.length
         console.log('FETCH AGAIN, threshold: ' + threshold)
         await loadMorePosts($dummyState, signal)
-        return
       }
       threshold = 10
-
       console.log('loaded')
       $state.loaded();
     }

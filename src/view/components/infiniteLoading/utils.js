@@ -34,9 +34,12 @@ const getEventHandler = (el, { state, distance, emitInfiniteEvent, top }) => {
         const { scrollTop, scrollHeight, clientHeight } = el;
         const validState = state.value == "loaded" || !state.value;
 
-        if (top && Math.ceil(scrollTop) - distance <= 0 && validState) emitInfiniteEvent();
-        if (!top && Math.ceil(scrollTop) + clientHeight >= scrollHeight - distance && validState)
+        if (top && Math.ceil(scrollTop) - distance <= 0 && validState) {
             emitInfiniteEvent();
+        }
+        if (!top && Math.ceil(scrollTop) + clientHeight >= scrollHeight - distance && validState) {
+            emitInfiniteEvent();
+        }
     };
 };
 // start scroll event

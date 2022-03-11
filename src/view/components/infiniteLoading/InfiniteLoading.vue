@@ -32,21 +32,21 @@ const params = {
   emitInfiniteEvent: emitter,
 };
 const stateWatcher = (el, prevHeight) =>
-    watch(state, newVal => {
-      if (newVal == "loaded" && top) {
-        Promise.resolve().then(() => {
-          el.scrollTop = el.scrollHeight - prevHeight;
-        });
-        prevHeight = el.scrollHeight;
-      }
-      if (newVal == "complete") removeScrollEvent(params);
-    });
-const identifierWatcher = () =>
-    watch(identifier, () => {
-      state.value = "";
-      removeScrollEvent(params);
-      startScrollEvent(params);
-    });
+  watch(state, newVal => {
+    if (newVal == "loaded" && top) {
+      Promise.resolve().then(() => {
+        el.scrollTop = el.scrollHeight - prevHeight;
+      });
+      prevHeight = el.scrollHeight;
+    }
+    if (newVal == "complete") removeScrollEvent(params);
+  });
+  const identifierWatcher = () =>
+  watch(identifier, () => {
+    state.value = "";
+    removeScrollEvent(params);
+    startScrollEvent(params);
+  });
 let eventHandler
 onMounted(() => {
   eventHandler = startScrollEvent(params);
@@ -58,7 +58,7 @@ onMounted(() => {
 onUnmounted(() => {
   removeScrollEvent(params, eventHandler);
 });
-defineExpose({ emitter })
+defineExpose({ emitter, state })
 </script>
 
 <template>
