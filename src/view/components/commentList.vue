@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { defineProps, PropType, ref } from "vue"
+import {computed, defineProps, PropType, ref} from "vue"
 import { CommentSection, CommentSectionSort, Post } from "../../models/models";
-import { parseCommentSection, parsePost, parseCommentTypeAndObjectId } from "../../utils/parsers"
+import { parseCommentSection, parseCommentTypeAndObjectId } from "../../utils/parsers"
 import PostCard from "./postCard.vue"
 import PostEditor from "@/view/components/postEditor.vue";
 import { useRouter } from "vue-router"
 import { useStore } from "vuex";
-import {fetchDynamicDetail} from "@/utils/webRequests";
+import {fetchAndCachePost} from "@/utils/webRequests";
 
 const router = useRouter()
 const store = useStore()
@@ -14,36 +14,47 @@ const path = router.currentRoute.value.fullPath
 
 const props = defineProps({
   postId: { type: String, required: true },
-  sort: { type: Number as PropType<CommentSectionSort>, required: false, default: CommentSectionSort.Hot }
+  sort: { type: Number as PropType<CommentSectionSort>, required: false, default: CommentSectionSort.Hot },
+  fetchPost: { type: Boolean, required: false, default: false }
 });
 
-const commentSection = ref<CommentSection>(null)
+const commentSection = ref<CommentSection>()
 const comments = ref<Post[]>([])
 
-let post: Post | null = null
+const post = computed<Post>(() => {
+  return store.getters.getCachedPost(props.postId)
+})
 let type = -1
 let oid: any = null
 
-fetchDynamicDetail(props.postId)
-  .then((data: any) => {
-    post = parsePost(data.data.card)
-    const results = parseCommentTypeAndObjectId(post)
-    type = results[0]
-    oid = results[1]
-    fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Parsing comment section:')
-        console.log(data)
+const loadCommentSection = async (post: Post) => {
+  const results = parseCommentTypeAndObjectId(post)
+  type = results[0]
+  oid = results[1]
+  if (!oid) {
+    // Post data is insufficient. Re-fetch the post before continue
+    await fetchAndCachePost(store, props.postId)
+  }
+  fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log('Parsing comment section:')
+      console.log(data)
 
-        commentSection.value = parseCommentSection(data.data, post!)
+      commentSection.value = parseCommentSection(data.data, post)
 
-        const fetchedComments = commentSection.value.comments
-        fetchedComments.forEach(it => store.commit('cachePost', it))
-        comments.value.push(...fetchedComments)
-        console.log(commentSection.value)
-      });
-  })
+      const fetchedComments = commentSection.value.comments
+      fetchedComments.forEach(it => store.commit('cachePost', it))
+      comments.value.push(...fetchedComments)
+      console.log(commentSection.value)
+    });
+}
+
+if (!post.value && props.fetchPost) {
+  fetchAndCachePost(store, props.postId).then(post => post && loadCommentSection(post))
+} else {
+  loadCommentSection(post.value)
+}
 
 const onShowReplies = (comment: Post) => {
     router.push({ name: 'comment', params: { type: comment.commentType, objectId: comment.commentObjectId, rootId: comment.commentRootId, targetId: comment.id, threadId: comment.commentThreadId }})
@@ -53,6 +64,10 @@ const loadMoreComments = async ($state: any) => {
   if (router.currentRoute.value.fullPath != path) {
     $state.loaded()
     return;
+  }
+  if (!commentSection.value) {
+    // Should not happen
+    return
   }
 
   console.log("Loading more comments");
@@ -65,7 +80,7 @@ const loadMoreComments = async ($state: any) => {
       console.log(data)
       $state.error()
     } else {
-      commentSection.value = parseCommentSection(data.data, post!)
+      commentSection.value = parseCommentSection(data.data, post.value)
 
       const fetchedComments = commentSection.value.comments
       fetchedComments.forEach(it => store.commit('cachePost', it))
@@ -99,10 +114,10 @@ const appendReplyTo = (comment: Post, reply: Post) => {
         <div v-for="comment in comments" :key="comment.id" class="post-border">
             <ul class="post-ul">
                 <li class="post-li">
-                    <PostCard :postId="comment.id" :resolvePostId="false" :link="true" @reply="r => appendReplyTo(comment, r)" />
+                    <PostCard :postId="comment.id" :parentPostId="postId" :link="true" @reply="r => appendReplyTo(comment, r)" />
                 </li>
                 <li v-for="chainedComment in comment.chainedPosts" :key="chainedComment.id" class="post-li">
-                    <PostCard :postId="chainedComment.id" :resolvePostId="false" :link="true" @reply="r => appendReplyTo(comment, r)" />
+                    <PostCard :postId="chainedComment.id" :parentPostId="postId" :link="true" @reply="r => appendReplyTo(comment, r)" />
                 </li>
                 <div v-if="comment.commentCount > comment.chainedPosts?.length ?? 0" class="post-show-replies flex flex-row px-3 justify-content-center align-items-center" @click="onShowReplies(comment)">
                     <div class="flex flex-column justify-content-between align-items-center" style="width: 48px; height: 16px;">

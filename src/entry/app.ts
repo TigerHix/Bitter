@@ -26,6 +26,8 @@ import OverlayPanel from "primevue/overlaypanel";
 import ToastService from 'primevue/toastservice';
 import Toast from 'primevue/toast';
 import AutoComplete from 'primevue/autocomplete';
+import Badge from 'primevue/badge';
+import BadgeDirective from 'primevue/badgedirective';
 import 'primevue/resources/themes/lara-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
@@ -73,7 +75,8 @@ const store = createStore({
       user: null,
       cache: {
         posts: {}
-      }
+      },
+      timelineMostRecentPostId: null
     }
   },
   getters: {
@@ -110,6 +113,9 @@ const store = createStore({
     },
     setCsrf(state: any, csrf: string) {
       state.csrf = csrf
+    },
+    setTimelineMostRecentPostId(state: any, postId: string) {
+      state.timelineMostRecentPostId = postId
     }
   }
 })
@@ -129,6 +135,8 @@ app.component('Textarea', Textarea)
 app.component('OverlayPanel', OverlayPanel)
 app.component('Toast', Toast)
 app.component('AutoComplete', AutoComplete)
+app.component('Badge', Badge)
+app.directive('badge', BadgeDirective)
 app.directive('linkified', linkify)
 app.component("InfiniteLoading", InfiniteLoading);
 app.use(VueTippy, {

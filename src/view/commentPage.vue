@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { CommentSection, Post } from "./../models/models";
 import { defineProps, ref, nextTick, computed } from "vue";
-import { parseComment, parseCommentSection, parseCommentSectionByTypeAndObjectId, parsePost } from "../utils/parsers";
+import { parseComment, parseCommentSection, parseCommentSectionByTypeAndObjectId } from "../utils/parsers";
 import PostCard from "./components/postCard.vue";
 import TopBar from "./components/topBar.vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import {fetchDynamicDetail} from "@/utils/webRequests";
+import {fetchAndCachePost} from "@/utils/webRequests";
 import PostEditor from "@/view/components/postEditor.vue";
 const router = useRouter()
 const store = useStore()
@@ -31,6 +31,8 @@ const mainPostDiv = ref<HTMLElement>()
 const containerHeightPixels = ref(0)
 const containerHeight = computed(() => containerHeightPixels.value + 'px')
 
+const commentDeleted = ref(false)
+
 const load = () => {
   loaded.value = false
   commentSection.value = null
@@ -42,6 +44,10 @@ const load = () => {
       .then((res) => res.json())
       .then((data) => {
         console.log(data)
+        if (!data.data) {
+          commentDeleted.value = true
+          throw new Error('Comment already deleted')
+        }
         const fetchedCommentSection: CommentSection = parseCommentSectionByTypeAndObjectId(data.data, props.type, props.objectId)
         const fetchedComments = fetchedCommentSection.comments
         fetchedComments.forEach(it => store.commit('cachePost', it))
@@ -52,23 +58,10 @@ const load = () => {
 
         console.log(mainPost.value)
 
-        const abovePost = store.getters.getCachedPost(props.postId)
-        if (abovePost) {
-          return Promise.resolve(abovePost)
-        } else {
-          return new Promise((resolve) => {
-            fetchDynamicDetail(props.postId)
-              .then((data: any) => {
-                const fetchedPost = parsePost(data.data.card)
-                store.commit('cachePost', fetchedPost)
-
-                return resolve(Promise.resolve(fetchedPost))
-              })
-          })
-        }
+        return fetchAndCachePost(store, props.postId, true)
       })
-      .then((postObject) => {
-        abovePosts.value.push(postObject)
+      .then((post) => {
+        if (post) abovePosts.value.push(post)
         // Load root comment
         if (!props.rootId || props.rootId === props.targetId) {
           return Promise.resolve(null)
@@ -76,6 +69,8 @@ const load = () => {
           return fetch(`https://api.bilibili.com/x/v2/reply/detail?type=${props.type}&oid=${props.objectId}&root=${props.rootId}`)
               .then((res) => res.json())
               .then((data) => {
+                if (!data.data) return null
+
                 const fetchedComment = parseComment(data.data.root, props.type, props.objectId)
                 store.commit('cachePost', fetchedComment)
 
@@ -87,9 +82,15 @@ const load = () => {
         if (rootCommentObject) {
           abovePosts.value.push(rootCommentObject)
         }
-        if (props.threadId !== '0') {
+
+        let threadId = props.threadId
+        if (props.threadId === '-1') {
+          threadId = mainPost.value!.commentThreadId!
+        }
+
+        if (threadId !== '0') {
           // Load up the entire thread
-          return fetch(`http://api.bilibili.com/x/v2/reply/dialog/cursor?type=${props.type}&oid=${props.objectId}&root=${props.rootId}&dialog=${props.threadId}&size=9999`)
+          return fetch(`http://api.bilibili.com/x/v2/reply/dialog/cursor?type=${props.type}&oid=${props.objectId}&root=${props.rootId}&dialog=${threadId}&size=9999`)
               .then((res) => res.json())
               .then((data) => {
                 const fetchedCommentSection = parseCommentSection(data.data, abovePosts.value[0])
@@ -182,7 +183,10 @@ load()
   <div class="flex flex-column">
     <TopBar title="评论" />
     <div class="comment-page-container flex flex-column">
-      <div v-show="loaded">
+      <div v-if="commentDeleted" class="comment-deleted">
+        此评论已被删除。
+      </div>
+      <div v-show="loaded && !commentDeleted">
         <ul class="post-ul">
           <li v-for="post in abovePosts" :key="post.id" class="post-li">
             <PostCard :postId="post.id" :link="true" /> 
@@ -212,5 +216,13 @@ load()
 <style scoped>
 .comment-page-container {
   min-height: v-bind(containerHeight);
+}
+.comment-deleted {
+  background-color: rgb(247, 249, 249);
+  color: #536471;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 20px;
 }
 </style>

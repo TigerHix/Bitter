@@ -13,7 +13,8 @@ defineProps({
   activeBackgroundColor: { type: String, required: false, default: 'rgba(15, 20, 25, 0.2)' },
   size: { type: Number, required: false, default: 36 },
   fontSize: { type: Number, required: false, default: 18 },
-  padding: { type: Number, required: false, default: 8 }
+  padding: { type: Number, required: false, default: 8 },
+  badge: { type: Number, required: false, default: -1 }
 })
 
 const iconEl = ref<Element>(null)
@@ -25,7 +26,8 @@ defineExpose({
 <template>
   <div class="icon-button flex flex-row justify-content-center align-items-center">
     <div class="icon-button-icon-container flex justify-content-center align-items-center" :style="{ 'width': text ? 'unset' : size + 'px', 'height': size + 'px' }" >
-      <div ref="iconEl" class="icon-button-icon">
+      <div ref="iconEl" class="icon-button-icon relative">
+        <div v-if="badge >= 0" v-badge="badge > 0 ? badge : null" class="absolute top-0 left-0 w-full h-full" :class="{'badge-dot': badge === 0}"></div>
         <font-awesome-icon v-if="icon" :icon="icon" :style="{ 'font-size': fontSize + 'px' }" />
         <img v-if="src" :title="title" :src="src" style="width: 100%; height: 100%;" :style="{ padding: padding + 'px'}" />
         <span v-if="text" :style="{ padding: padding + 'px'}">{{ text }}</span>

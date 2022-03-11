@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, toRefs, onUnmounted, watch, defineProps, defineEmits } from "vue";
+import { onMounted, ref, toRefs, onUnmounted, watch, defineProps, defineEmits, defineExpose } from "vue";
 import Spinner from "./Spinner.vue";
 import {
   startScrollEvent,
@@ -21,6 +21,7 @@ const state = ref("");
 // eslint-disable-next-line vue/no-setup-props-destructure
 const { id, top, target, distance, firstLoad, slots } = props;
 const { identifier } = toRefs(props);
+const emitter = infiniteEventEmitter(emit, stateHandler(state))
 const params = {
   id,
   state,
@@ -28,7 +29,7 @@ const params = {
   distance,
   top,
   firstLoad,
-  emitInfiniteEvent: infiniteEventEmitter(emit, stateHandler(state)),
+  emitInfiniteEvent: emitter,
 };
 const stateWatcher = (el, prevHeight) =>
     watch(state, newVal => {
@@ -57,6 +58,7 @@ onMounted(() => {
 onUnmounted(() => {
   removeScrollEvent(params, eventHandler);
 });
+defineExpose({ emitter })
 </script>
 
 <template>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { defineProps, onMounted, PropType, ref } from "vue"
 import { useStore } from "vuex";
-import {Post, PostType} from "../../models/models"
+import {ObjectIdHelper, Post, PostType} from "../../models/models"
 import IconButton from "./iconButton.vue"
+import {useToast} from "primevue/usetoast";
 const store = useStore()
+const toast = useToast()
 
 const props = defineProps({
   post: { type: Object as PropType<Post>, required: true },
@@ -16,6 +18,10 @@ const iconButton = ref(null)
 // TODO: Refactor animation
 const onLike = async () => {
   const post = props.post
+  if (!ObjectIdHelper.isPostId(post.id)) {
+    toast.add({severity: 'error', detail: '暂不支持点赞非动态内容', life: 3000})
+    return
+  }
   if (post.isLiked) {
     post.isLiked = false
     post.likeCount--

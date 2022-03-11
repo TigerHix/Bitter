@@ -4,19 +4,22 @@ export default { name: 'Timeline' }
 
 <script setup lang="ts">
 
-import { ref, defineExpose, onMounted, PropType, defineProps, watch } from "vue";
+import { ref, defineExpose, PropType, defineProps, defineEmits, watch } from "vue";
 import PostCard from "./components/postCard.vue";
 import TopBar from './components/topBar.vue'
 import { parseAndFilterPosts } from "../utils/parsers";
 import { useRouter } from "vue-router";
 import { useStore } from 'vuex'
 import { FollowingGroup, Post } from '../models/models';
+import {$dummyState} from "@/view/components/infiniteLoading/utils";
 const router = useRouter();
 const path = router.currentRoute.value.fullPath
 const store = useStore()
+const infiniteLoading = ref()
+const emit = defineEmits(['clearUnreadPostCount'])
 
 let posts = ref<Post[]>([]);
-let refreshAbortController: AbortController
+let refreshAbortController: AbortController = new AbortController()
 let loadMoreAbortController: AbortController
 
 const props = defineProps({
@@ -26,6 +29,7 @@ const props = defineProps({
 watch(() => props.groupFilter, () => refresh())
 
 let threshold = 10
+let firstLoad = true
 
 const loadMorePosts = async ($state: any, signal: any = null) => {
   if (router.currentRoute.value.fullPath != path) {
@@ -35,18 +39,52 @@ const loadMorePosts = async ($state: any, signal: any = null) => {
 
   console.log("Loading more posts");
 
+  if (firstLoad) {
+    console.log('First load')
+    const data = await fetch(
+      `https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?uid=${store.state.user.uid}&type_list=268435455&from=weball&platform=web`,
+      { signal: refreshAbortController.signal }
+    ).then((res) => res.json())
+
+    if (data.code != 0) {
+      console.log('Error!')
+      console.log(data)
+      $state.error()
+    } else {
+      const fetchedPosts: Post[] = parseAndFilterPosts(data.data.cards)
+      fetchedPosts.forEach(it => store.commit('cachePost', it))
+      store.commit('setTimelineMostRecentPostId', fetchedPosts[0].id)
+      posts.value = fetchedPosts
+
+      firstLoad = false
+
+      const groupFilteredPosts = groupFilterPosts(fetchedPosts)
+      if (groupFilteredPosts.length < threshold && threshold > 0) {
+        threshold -= groupFilteredPosts.length
+        console.log('FETCH AGAIN, threshold: ' + threshold)
+        await loadMorePosts($dummyState, signal)
+        return
+      }
+      threshold = 10
+      console.log('loaded')
+      $state.loaded()
+    }
+    return
+  }
+
   if (!signal) {
     loadMoreAbortController?.abort()
     loadMoreAbortController = new AbortController()
     signal = loadMoreAbortController.signal
   }
   try {
+    console.log('Subsequent load')
     const offset = posts.value[posts.value.length - 1].id
-    const response = await fetch(
+    const data = await fetch(
       `https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_history?uid=${store.state.user.uid}&offset_dynamic_id=${offset}&type=268435455&from=weball&platform=web`,
       { signal }
-    );
-    const data = await response.json()
+    ).then((res) => res.json())
+
     if (data.code != 0) {
       console.log('Error!')
       console.log(data)
@@ -60,22 +98,20 @@ const loadMorePosts = async ($state: any, signal: any = null) => {
       if (groupFilteredPosts.length < threshold && threshold > 0) {
         threshold -= groupFilteredPosts.length
         console.log('FETCH AGAIN, threshold: ' + threshold)
-        await loadMorePosts($state, signal)
+        await loadMorePosts($dummyState, signal)
         return
       }
       threshold = 10
 
+      console.log('loaded')
       $state.loaded();
     }
   } catch (error) {
     console.log(error)
-    $state.error()
+    if (error.toString().includes('aborted')) $state.loaded()
+    else $state.error()
   }
 };
-
-onMounted(() => {
-  refresh()
-})
 
 const refresh = () => {
   console.log("Refreshing")
@@ -84,26 +120,11 @@ const refresh = () => {
   loadMoreAbortController?.abort()
   refreshAbortController = new AbortController()
   posts.value = []
-  fetch(
-    `https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?uid=${store.state.user.uid}&type_list=268435455&from=weball&platform=web`,
-    { signal: refreshAbortController.signal }
-  )
-    .then((res) => res.json())
-    .then((data) => {
-      const fetchedPosts: Post[] = parseAndFilterPosts(data.data.cards)
-      fetchedPosts.forEach(it => store.commit('cachePost', it))
-      posts.value = fetchedPosts
+  firstLoad = true
+  unreadPostCount.value = 0
+  emit('clearUnreadPostCount')
 
-      // const groupFilteredPosts = groupFilterPosts(fetchedPosts)
-      // if (groupFilteredPosts.length < threshold && threshold > 0) {
-      //   threshold -= groupFilteredPosts.length
-      //   console.log('FETCH AGAIN, threshold: ' + threshold)
-      //   loadMorePosts({ error: () => {}, loaded: () => {} })
-      //   return
-      // }
-
-      window.scrollTo(0, 0)
-    });
+  infiniteLoading.value.emitter()
 }
 
 const groupFilterPosts = (posts: Post[]) => {
@@ -113,17 +134,23 @@ const groupFilterPosts = (posts: Post[]) => {
   })
 }
 
-defineExpose({ refresh })
+const unreadPostCount = ref(-1)
+defineExpose({ refresh, unreadPostCount })
 </script>
 
 <template>
   <div class="flex flex-column justify-content-start">
     <TopBar title="主页" :icon="null" />
-    <div v-if="posts.length > 0" class="content flex flex-column justify-content-start">
+    <div class="content flex flex-column justify-content-start">
+      <div v-if="unreadPostCount > 0" class="post-show-latest flex flex-row px-3 justify-content-center align-items-center bottom-separator" @click="refresh()">
+        <div class="flex justify-content-center align-items-center" style="height: 16px;">
+          显示 {{unreadPostCount}} 条新动态
+        </div>
+      </div>
       <div v-for="post in groupFilterPosts(posts)" :key="post.id" class="post-border">
         <PostCard :postId="post.id" :link="true" />
       </div>
-      <InfiniteLoading :posts="posts" @infinite="loadMorePosts" class="flex justify-content-center py-4" />
+      <InfiniteLoading ref="infiniteLoading" :posts="posts" @infinite="loadMorePosts" class="flex justify-content-center py-4" />
     </div>
   </div>
 </template>
@@ -131,5 +158,15 @@ defineExpose({ refresh })
 <style>
 .content {
   width: 100%;
+}
+.post-show-latest {
+  transition: background-color 0.2s ease-out 0s;
+  height: 48px;
+  font-size: 15px;
+  color: rgb(251, 114, 153);
+  cursor: pointer;
+}
+.post-show-latest:hover {
+  background-color: rgba(0, 0, 0, 0.03);
 }
 </style>

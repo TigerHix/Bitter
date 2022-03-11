@@ -242,6 +242,11 @@ const openFollowerUsersDialog = () => {
   // loadMoreLikedUsers({ error: () => {}, loaded: () => {}, complete: () => {} })
 }
 
+router.afterEach(() => {
+  followerUsersDialog.value = false
+  followingUsersDialog.value = false
+})
+
 </script>
 
 <template>
@@ -306,7 +311,7 @@ const openFollowerUsersDialog = () => {
         </TabPanel>
         <TabPanel header="相簿">
           <div v-for="post in mediaPosts" :key="post.id" class="post-border">
-            <PostCard :postId="post.id" :link="true" :resolvePostId="true" />
+            <PostCard :postId="post.id" :link="true" />
           </div>
           <InfiniteLoading id="media-posts-infinite-loading" @infinite="loadMoreMediaPosts" class="flex justify-content-center py-4">
             <template #complete>

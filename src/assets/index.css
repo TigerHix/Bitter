@@ -1,5 +1,15 @@
 body {
   margin: 0;
+  overflow-y: scroll;
+}
+
+.truncate-rows-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dot {
@@ -12,6 +22,26 @@ body {
   border-bottom-color: rgb(239, 243, 244);
   border-bottom-width: 1px;
   border-bottom-style: solid;
+}
+
+.p-badge {
+  border-radius: 9px;
+  height: 18px;
+  display: flex;
+  min-width: 18px;
+  padding: 0 4px;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  background-color: rgb(251, 114, 153);
+  border: white solid 1px;
+}
+
+.badge-dot .p-badge.p-component.p-badge-dot {
+  width: 8px;
+  height: 8px;
+  min-width: unset;
+  padding: 0;
 }
 
 .p-dialog.p-component {

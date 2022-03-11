@@ -1,10 +1,10 @@
 import {
   CommentSection,
-  CommentSectionType,
+  ObjectType,
   Emoticon,
   Post,
   PostType,
-  toCommentSectionType, Topic,
+  toObjectType, Topic,
   User
 } from "@/models/models";
 
@@ -15,25 +15,25 @@ export const parseAndFilterPosts = (data: any) => {
     .filter((it: Post) => it.type <= PostType.Column && !it.isAd);
 }
 
-export const parseCommentTypeAndObjectId = (post: Post): [CommentSectionType, any] => {
-  let type = CommentSectionType.Post
+export const parseCommentTypeAndObjectId = (post: Post): [ObjectType, any] => {
+  let type = ObjectType.Post
   let oid: any = post.id
   switch (post.type) {
       case PostType.Album:
-          type = CommentSectionType.Album
-          oid = post.album!.id
+          type = ObjectType.Album
+          oid = post.album?.id
           break
       case PostType.Video:
-          type = CommentSectionType.Video
-          oid = post.video!.aid
+          type = ObjectType.Video
+          oid = post.video?.aid
           break
       case PostType.ShortVideo:
-          type = CommentSectionType.ShortVideo
-          oid = post.video!.aid
+          type = ObjectType.ShortVideo
+          oid = post.video?.aid
           break
       case PostType.Column:
-          type = CommentSectionType.Column
-          oid = post.column!.id
+          type = ObjectType.Column
+          oid = post.column?.id
           break
   }
   return [type, oid]
@@ -51,7 +51,7 @@ export const parseCommentSection = (data: any, post: Post): CommentSection => {
   }
 }
 
-export const parseCommentSectionByTypeAndObjectId = (data: any, type: CommentSectionType, objectId: string): CommentSection => {
+export const parseCommentSectionByTypeAndObjectId = (data: any, type: ObjectType, objectId: string): CommentSection => {
   return {
     cursor: data.cursor,
 
@@ -62,7 +62,7 @@ export const parseCommentSectionByTypeAndObjectId = (data: any, type: CommentSec
   }
 }
 
-export const parseComment = (data: any, type: CommentSectionType, objectId: string): Post => {
+export const parseComment = (data: any, type: ObjectType, objectId: string): Post => {
   return {
     id: data.rpid_str,
     user: {
@@ -94,8 +94,8 @@ export const parseComment = (data: any, type: CommentSectionType, objectId: stri
 
     commentType: type,
     commentObjectId: objectId,
-    commentRootId: data.root === 0 ? data.rpid_str : data.root,
-    commentThreadId: data.dialog
+    commentRootId: data.root === 0 ? data.rpid_str : data.root.toString(),
+    commentThreadId: data.dialog.toString()
   }
 }
 
@@ -183,7 +183,7 @@ export const parsePost = (data: any): Post => {
 
     isAd: data.display?.add_on_card_info?.at(0)?.goods_card,
 
-    commentType: toCommentSectionType(type),
+    commentType: toObjectType(type),
     commentObjectId: data.desc.rid_str,
 
     isPinned: data.extra?.is_space_top === 1

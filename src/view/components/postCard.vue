@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import Avatar from "./avatar"
-import VideoCard from "./videoCard"
-import ColumnCard from "./columnCard"
-import {Post, PostImage, PostType, User} from "./../../models/models"
+import Avatar from "./avatar.vue"
+import VideoCard from "./videoCard.vue"
+import ColumnCard from "./columnCard.vue"
+import {ObjectIdHelper, Post, PostImage, PostType, User} from "@/models/models"
 import {computed, defineEmits, defineProps, onMounted, ref} from "vue"
-import {formatTime, formatTimeAgo} from "./../../utils/formatTimestamp"
+import {formatTime, formatTimeAgo} from "@/utils/formatTimestamp"
 import {format10k} from "@/utils/formatNumber";
-import {fetchDynamicDetail} from "@/utils/webRequests"
+import {fetchAndCachePost} from "@/utils/webRequests"
 import {RouteLocationRaw, useRouter} from "vue-router";
 import TopBar from "./topBar.vue"
 import AvatarCard from "./avatarCard.vue"
 import LikeButton from './likeButton.vue'
 import IconButton from './iconButton.vue'
 import {LikeListReply, LikeListReq} from "@/proto/app/dynamic/v2/dynamic_pb"
-import {dynamicClient, makeHeaders} from "../../utils/appRequests"
+import {dynamicClient, makeHeaders} from "@/utils/appRequests"
 import {useStore} from 'vuex'
 import PostText from "./postText.vue"
-import {parsePost} from "@/utils/parsers";
 import PostEditor from "@/view/components/postEditor.vue";
 import {useToast} from "primevue/usetoast";
 
@@ -32,8 +31,7 @@ const removeRouterGuard = router.beforeEach(() => {
 const props = defineProps({ 
   postId: { type: String, required: true },
   parentPostId: { type: String, required: false, default: undefined }, // If comment
-  resolvePostId: { type: Boolean, required: false, default: true },
-  updatePost: { type: Boolean, required: false, default: false },
+  fetchPost: { type: Boolean, required: false, default: false },
   embedded: { type: Boolean, required: false, default: false },
   showMedia: { type: Boolean, required: false, default: true },
   showActions: { type: Boolean, required: false, default: true },
@@ -42,7 +40,8 @@ const props = defineProps({
   noPadding: { type: Boolean, required: false, default: false },
   showTopChain: { type: Boolean, required: false, default: null },
   showBottomChain: { type: Boolean, required: false, default: null },
-  truncateText: { type: Boolean, required: false, default: false }
+  truncateText: { type: Boolean, required: false, default: false },
+  backgroundColor: { type: String, required: false, default: 'unset' }
 });
 const emit = defineEmits(['reply'])
 let postDeleted = ref(false)
@@ -50,17 +49,10 @@ const post = computed<Post>(() => {
   return store.getters.getCachedPost(props.postId)
 })
 
-if ((!post.value && props.resolvePostId) || props.updatePost) {
-  fetchDynamicDetail(props.postId)
-    .then((data: any) => {
-      console.log(data)
-      if (!data.data.card) {
-        postDeleted.value = true
-      } else {
-        console.log('Parsing: ')
-        console.log(data)
-        store.commit('cachePost', parsePost(data.data.card))
-      }
+if (!post.value && props.fetchPost) {
+  fetchAndCachePost(store, props.postId)
+    .then(post => {
+      if (!post) postDeleted.value = true
     })
 }
 
@@ -92,7 +84,9 @@ const onLink = (newTab: boolean = false) => {
   const p = post.value
   let args: RouteLocationRaw
   if (p.type === PostType.Comment) {
-    args = { name: 'comment', params: { postId: props.parentPostId, type: p.commentType, objectId: p.commentObjectId, rootId: p.commentRootId, targetId: p.id, threadId: p.commentThreadId }}
+    const params: any = { type: p.commentType, objectId: p.commentObjectId, rootId: p.commentRootId, targetId: p.id, threadId: p.commentThreadId }
+    if (props.parentPostId) params.postId = props.parentPostId
+    args = { name: 'comment', params: params }
   } else {
     args = { name: 'post', params: { postId: p.id }}
   }
@@ -115,7 +109,7 @@ const onLink = (newTab: boolean = false) => {
 const likedUsersDialog = ref(false)
 const likedUsers = ref<User[]>([])
 let nextPage = 0
-const loadMoreLikedUsers = async $state => {
+const loadMoreLikedUsers = async ($state: any) => {
   console.log("Loading more liked users");
 
   const request = new LikeListReq()
@@ -135,10 +129,10 @@ const loadMoreLikedUsers = async $state => {
     console.log(reply.toObject())
     
     likedUsers.value.push(...reply.getListList().map(it => { return { 
-      uid: it.getAuthor().getMid(),
-      name: it.getAuthor().getName(),
-      avatarUrl: it.getAuthor().getFace(),
-      bio: it.getAuthor().getSign(),
+      uid: it.getAuthor()!.getMid(),
+      name: it.getAuthor()!.getName(),
+      avatarUrl: it.getAuthor()!.getFace(),
+      bio: it.getAuthor()!.getSign(),
       following: it.getAttend() === 1
     } }))
 
@@ -156,7 +150,11 @@ const loadMoreLikedUsers = async $state => {
 }
 const openLikedUsersDialog = () => {
   if (post.value.type == PostType.Comment) {
-    toast.add({severity: 'error', detail: '暂不支持查看评论的点赞列表。', life: 3000})
+    toast.add({severity: 'error', detail: '暂不支持查看评论的点赞列表', life: 3000})
+    return
+  }
+  if (!ObjectIdHelper.isPostId(post.value.id)) {
+    toast.add({severity: 'error', detail: '暂不支持查看非动态内容的点赞列表', life: 3000})
     return
   }
 
@@ -164,7 +162,7 @@ const openLikedUsersDialog = () => {
   loadMoreLikedUsers({ error: () => {}, loaded: () => {}, complete: () => {} })
 }
 
-const postContainer = ref(null)
+const postContainer = ref<HTMLElement>()
 
 onMounted(() => {
   if (postContainer.value) postContainer.value.onmousedown = function(e) { if (e.button === 1 && props.link) return false; }
@@ -179,13 +177,28 @@ const onReply = (reply: Post) => {
 }
 const openReplyDialog = () => replyDialog.value = true
 
+// Reposts
+const viewReposts = (post: Post) => {
+  if (!ObjectIdHelper.isPostId(post.id)) {
+    toast.add({severity: 'error', detail: '暂不支持查看非动态内容的转发列表', life: 3000})
+    return
+  }
+  router.push(`/post/${post.id}/reposts`)
+}
+
+router.afterEach(() => {
+  likedUsersDialog.value = false
+  replyDialog.value = false
+})
+
 </script>
 
 <template>
   <div v-if="postDeleted" class="post-deleted">
     此动态已被删除。
   </div>
-  <div v-if="post" ref="postContainer" class="post-container" :class="{ 'post-container-link': link, 'large': large, 'no-padding': noPadding }"  @click="link && onLink() && $event.stopPropagation()" @click.middle="link && onLink(true) && $event.stopPropagation()">
+  <div v-if="post" ref="postContainer" class="post-container" :class="{ 'post-container-link': link, 'large': large, 'no-padding': noPadding }"  @click="link && onLink() && $event.stopPropagation()" @click.middle="link && onLink(true) && $event.stopPropagation()"
+    :style="{'background-color': backgroundColor}">
     <div v-if="post.isPinned && !embedded" class="flex post-header" :class="{ 'large': large }">
       <div class="flex justify-content-center align-items-center" style="font-size: 16px; margin-right: 12px; width: 20px;">
         <font-awesome-icon :icon="['fas', 'thumbtack']" />
@@ -226,7 +239,7 @@ const openReplyDialog = () => replyDialog.value = true
           </Avatar>
         </div>
       </div>
-      <PostCard :postId="post.sourcePostId" :large="large" :noPadding="true" />
+      <PostCard :postId="post.sourcePostId" :large="large" :noPadding="true" :fetchPost="true" />
     </div>
     <div v-else class="flex flex-row justify-content-start">
       <div v-if="!large && !embedded">
@@ -324,8 +337,8 @@ const openReplyDialog = () => replyDialog.value = true
             <ColumnCard :column="post.column" :link="true" />
           </div>
 
-          <div v-if="post.sourcePostId" class="post-embedded-post-container" style="margin-top: 14px; border-radius: 16px;">
-            <PostCard :postId="post.sourcePostId" :embedded="true" :link="true" />
+          <div v-if="post.sourcePostId" class="post-embedded-post-container" style="margin-top: 14px; border-radius: 16px; overflow: hidden;">
+            <PostCard :postId="post.sourcePostId" :embedded="true" :link="true" :fetchPost="true" />
           </div>
         </div>
 
@@ -337,12 +350,12 @@ const openReplyDialog = () => replyDialog.value = true
 
         <div v-if="large && (post.commentCount > 0 || post.repostCount > 0 || post.likeCount > 0)" class="post-stats py-3">
           <span v-if="post.commentCount > 0" style="margin-right: 20px;"><span class="post-stats-number">{{ format10k(post.commentCount) }}</span> 评论</span>
-          <router-link :to="`/post/${post.id}/reposts`" class="post-stats-link">
+          <a class="post-stats-link" @click="viewReposts(post)">
             <span v-if="post.repostCount > 0" style="margin-right: 20px;">
               <span class="post-stats-number">{{ format10k(post.repostCount) }}</span>
               <span style="color: #536471;"> 转发</span>
             </span>
-          </router-link>
+          </a>
           <a @click="openLikedUsersDialog()" class="post-stats-link">
             <span v-if="post.likeCount > 0">
               <span class="post-stats-number">{{ format10k(post.likeCount) }}</span>
@@ -355,8 +368,8 @@ const openReplyDialog = () => replyDialog.value = true
           <div v-if="large" class="post-actions large">
             <div class="grid m-0 w-100 h-100" style="padding: 4px;">
               <div class="col-3 p-0 flex justify-content-center align-items-center">
-                <a class="no-underline" @click.stop="openReplyDialog()">
-                  <font-awesome-icon :icon="['far', 'comment']" />
+                <a @click.stop="openReplyDialog()">
+                  <IconButton :icon="['far', 'comment']" :size="40" :fontSize="20" color="rgb(83, 100, 113)" hoverColor="rgb(29, 155, 240)" activeColor="rgb(29, 155, 240)" hoverBackgroundColor="rgba(29, 155, 240, 0.1)" activeBackgroundColor="rgba(29, 155, 240, 0.2)" />
                 </a>
               </div>
               <div class="col-3 p-0 flex justify-content-center align-items-center">
@@ -449,7 +462,7 @@ const openReplyDialog = () => replyDialog.value = true
   cursor: pointer;
 }
 .post-container-link:hover {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(0, 0, 0, 0.03) !important;
 }
 .post-header {
   color: #536471;

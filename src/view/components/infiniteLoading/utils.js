@@ -60,4 +60,6 @@ const removeScrollEvent = (params, eventHandler) => {
     target.removeEventListener("scroll", eventHandler);
 };
 
+export const $dummyState = {loaded: () => {}, complete: () => {}, error: () => {}}
+
 export { stateHandler, infiniteEventEmitter, startScrollEvent, removeScrollEvent };

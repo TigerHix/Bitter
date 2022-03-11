@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import {computed, nextTick, onMounted, ref} from 'vue'
 import IconButton from './components/iconButton.vue';
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
@@ -69,16 +69,28 @@ onMounted(async () => {
 const onHome = () => {
   if (router.currentRoute.value.path == '/') {
     mainColumnComponent.value!.refresh()
+    window.scrollTo(0, 0)
+  } else {
+    router.push('/')
   }
-  router.push('/')
-  window.scrollTo(0, 0)
 }
 const onExplore = () => {
   router.push(`/explore`)
   window.scrollTo(0, 0)
 }
 const onNotifications = () => {
-  router.push(`/notifications`)
+  if (router.currentRoute.value.path == '/notifications') {
+    mainColumnComponent.value!.refresh()
+  } else {
+    router.push(`/notifications`)
+    const remove = router.afterEach(() => {
+      nextTick(() => {
+        mainColumnComponent.value!.refresh()
+        remove()
+      })
+    })
+  }
+  unreadNotificationCount.value = -1
   window.scrollTo(0, 0)
 }
 const onProfile = () => {
@@ -93,20 +105,52 @@ const onSearch = () => {
   if (!pendingQuery.value.trim()) return
   router.push('/search/' + escape(pendingQuery.value))
 }
+
+const unreadNotificationCount = ref(-1)
+const checkUnreadNotifications = () => {
+  fetch(`https://api.bilibili.com/x/msgfeed/unread?build=0&mobi_app=web`).then(res => res.json())
+    .then((data: any) => {
+      unreadNotificationCount.value = data.data.at + data.data.like + data.data.reply
+      if (unreadNotificationCount.value === 0) unreadNotificationCount.value = -1
+    })
+  setTimeout(checkUnreadNotifications, 1000 * 60)
+}
+checkUnreadNotifications()
+
+const unreadPostCount = ref(-1)
+const checkUnreadPosts = () => {
+  if (store.state.timelineMostRecentPostId) {
+    fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/web_cyclic_num?type_list=268435455&offset=${store.state.timelineMostRecentPostId}`).then(res => res.json())
+      .then((data: any) => {
+        unreadPostCount.value = data.data.update_num ?? -1
+        mainColumnComponent.value!.unreadPostCount = unreadPostCount.value
+      })
+  }
+  setTimeout(checkUnreadPosts, 1000 * 60)
+}
+checkUnreadPosts()
+const clearUnreadPostCount = () => unreadPostCount.value = -1
 </script>
 
 <template>
   <div class="flex flex-row justify-content-center">
     <div class="flex flex-column navigation align-items-center justify-content-center">
       <IconButton src="logo.png" hoverBackgroundColor="rgba(251, 114, 153, 0.1)" activeBackgroundColor="rgba(251, 114, 153, 0.1)" :size="50" :padding="4" @click="onHome()" class="navigation-icon" />
-      <IconButton :icon="['fas', 'home']" :color="path === '/' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onHome()" class="navigation-icon" />
+      <IconButton :icon="['fas', 'home']" :color="path === '/' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onHome()" class="navigation-icon"
+                  :badge="unreadPostCount > 0 ? 0 : -1" />
       <IconButton :icon="['fas', 'hashtag']" :color="path === '/explore' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onExplore()" class="navigation-icon" />
-      <IconButton :icon="['fas', 'bell']" :color="path === '/notifications' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onNotifications()" class="navigation-icon" />
+      <IconButton :icon="['fas', 'bell']" :color="path === '/notifications' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22"
+                  @click="onNotifications()"
+                  :badge="unreadNotificationCount"
+                  class="navigation-icon" />
       <IconButton v-if="store.state.user" :icon="['fas', 'user']" :color="path === `/profile/${store.state.user.uid}` ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onProfile()" class="navigation-icon" />
     </div>
     <router-view v-if="authenticated" id="mainColumn" class="flex main-column" v-slot="{ Component }">
       <keep-alive>
-        <component :key="$route.fullPath" :is="Component" ref="mainColumnComponent" :groupFilter="(selectedGroup == null || selectedGroup.default) ? null : selectedGroup" />
+        <component :key="$route.fullPath" :is="Component" ref="mainColumnComponent"
+                   :groupFilter="(selectedGroup == null || selectedGroup.default) ? null : selectedGroup"
+                   :unreadPostCount="unreadPostCount"
+                   @clearUnreadPostCount="clearUnreadPostCount()" />
       </keep-alive>
     </router-view>
     <div class="flex flex-column sidebar">

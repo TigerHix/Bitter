@@ -1,7 +1,45 @@
-import {User} from "@/models/models";
-
+import {ObjectIdHelper, Post, User} from "@/models/models";
+import {parsePost} from "@/utils/parsers";
+import {Store} from "vuex";
 const limit = require('simple-rate-limiter')
-const promisify = require('util').promisify
+
+export const fetchAndCachePost = (store: Store<any>, postId: string, update: boolean = true): Promise<Post | null> => {
+  const cachedPost = store.getters.getCachedPost(postId)
+  if (!update && cachedPost) {
+    return Promise.resolve(cachedPost)
+  } else {
+    let promise
+    if (!ObjectIdHelper.isPostId(postId)) {
+      promise = ObjectIdHelper.fetchContext(postId)
+        .then(post => {
+          if (!post) return null
+          console.log('Comment context: ')
+          console.log(post)
+          post.mentionedUsers.push(store.state.user)
+          store.commit('cachePost', post)
+          return post
+        })
+    } else {
+      promise = fetchDynamicDetail(postId)
+        .then((data: any) => {
+          console.log('Fetched data:')
+          console.log(data)
+          if (!data.data.card) return null
+          const post = parsePost(data.data.card)
+          post.mentionedUsers.push(store.state.user)
+          console.log('Converted to post:')
+          console.log(post)
+          store.commit('cachePost', post)
+          return post
+        })
+    }
+    if (cachedPost) {
+      // Return the cached copy - post updated in the background
+      return Promise.resolve(cachedPost)
+    }
+    return promise
+  }
+}
 
 export const fetchUser = (mid: number): Promise<User> => Promise.all([
     fetch(`https://api.bilibili.com/x/web-interface/card?mid=${mid}&photo=1`).then((res) => res.json()),

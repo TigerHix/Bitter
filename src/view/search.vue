@@ -57,6 +57,11 @@ const loadMorePosts = async ($state: any) => {
 const users = ref<User[]>([])
 let usersNextPage = 1
 const loadMoreUsers = async ($state: any) => {
+  if (router.currentRoute.value.fullPath != path) {
+    $state.loaded()
+    return;
+  }
+
   try {
     const data = await fetch(`https://api.bilibili.com/x/web-interface/search/type?context=&search_type=bili_user&page=${usersNextPage}&order=&keyword=${unescape(props.query)}&category_id=&user_type=&order_sort=&changing=mid&__refresh__=true&_extra=&highlight=1&single_column=0`).then(res => res.json())
 

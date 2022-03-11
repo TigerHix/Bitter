@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FollowButton from './followButton.vue';
 import { User } from "@/models/models"
-import { defineProps, PropType } from "vue"
+import {defineProps, PropType, ref, watch} from "vue"
 import { useRouter } from "vue-router"
 import {fetchUser} from "@/utils/webRequests";
 import {format10k} from "@/utils/formatNumber";
@@ -18,18 +18,23 @@ const props = defineProps({
     bold: { type: Boolean, required: false, default: false }
 })
 
+const resolvedUser = ref<User>(props.user)
+watch(() => props.user, () => resolvedUser.value = props.user)
+
 const onClick = (newTab: boolean = false) => {
-    if (newTab) window.open(router.resolve('/profile/' + props.user.uid).href, '_blank')
-    else router.push('/profile/' + props.user.uid)
+    if (newTab) window.open(router.resolve('/profile/' + resolvedUser.value.uid).href, '_blank')
+    else router.push('/profile/' + resolvedUser.value.uid)
 }
 let fetchedProfile = false
 const onHover = () => {
-    if (fetchedProfile) return
-    fetchUser(props.user.uid)
-        .then((user: any) => {
-            Object.assign(props.user, user)
-            fetchedProfile = true
-        })
+  if (fetchedProfile) return
+  fetchUser(props.user.uid)
+    .then((u: any) => {
+      resolvedUser.value = u
+      console.log('Updating resolved user: ')
+      console.log(resolvedUser.value)
+      fetchedProfile = true
+    })
 }
 const appendToApp = () => document.querySelector(".main-column");
 </script>
@@ -51,7 +56,7 @@ const appendToApp = () => document.querySelector(".main-column");
         <template #default>
             <slot>
                 <div v-if="mode === 'image'" class="avatar" :class="{ 'small': small, 'medium': medium, 'large': large }">
-                    <img :src="user.avatarUrl" />
+                    <img :src="resolvedUser.avatarUrl" />
                     <div v-if="popup">
                         <div class="avatar-mask" @click.stop="onClick()" @click.middle.stop="onClick(true)"></div>
                     </div>
@@ -60,8 +65,8 @@ const appendToApp = () => document.querySelector(".main-column");
                     </div>
                 </div>
                 <span v-else-if="mode === 'text'">
-                    <router-link @click.stop @click.middle.stop :to="`/profile/${user.uid}`">
-                        <a class="post-link" :style="{ 'font-weight': bold ? 'bold' : 'unset' }">{{ prependAt ? '@' : '' }}{{ user.name }} </a>
+                    <router-link @click.stop @click.middle.stop :to="`/profile/${resolvedUser.uid}`">
+                        <a class="post-link" :style="{ 'font-weight': bold ? 'bold' : 'unset' }">{{ prependAt ? '@' : '' }}{{ resolvedUser.name }} </a>
                     </router-link>
                 </span>
             </slot>
@@ -70,31 +75,31 @@ const appendToApp = () => document.querySelector(".main-column");
         <template #content="{ hide }">
             <div class="avatar-popper-container flex flex-column justify-content-start">
                 <div class="flex flex-row align-items-start justify-content-between">
-                    <Avatar :user="user" @click="hide()" :popup="false" :large="true" />
-                    <FollowButton :user="user" :large="true" />
+                    <Avatar :user="resolvedUser" @click="hide()" :popup="false" :large="true" />
+                    <FollowButton :user="resolvedUser" :large="true" />
                 </div>
                 <div class="flex flex-column justify-content-center" style="flex: 1;">
                     <div style="margin-top: 8px;" class="flex flex-column align-items-start">
                         <div class="avatar-popper-name">
-                            {{ user.name }}
+                            {{ resolvedUser.name }}
                         </div>
-                        <div v-if="user.specialFollowedBy" class="user-special-followed-you flex align-items-center justify-content-center" style="margin-top: 2px;">
+                        <div v-if="resolvedUser.specialFollowedBy" class="user-special-followed-you flex align-items-center justify-content-center" style="margin-top: 2px;">
                             <span style="margin-top: -1.5px;">特别关注了你</span>
                         </div>
-                        <div v-else-if="user.followedBy" class="user-followed-you flex align-items-center justify-content-center" style="margin-top: 2px;">
+                        <div v-else-if="resolvedUser.followedBy" class="user-followed-you flex align-items-center justify-content-center" style="margin-top: 2px;">
                             <span style="margin-top: -1.5px;">关注了你</span>
                         </div>
                     </div>
-                    <div v-if="user.bio" class="avatar-popper-bio" style="margin-top: 12px;">
-                        {{ user.bio }}
+                    <div v-if="resolvedUser.bio" class="avatar-popper-bio" style="margin-top: 12px;">
+                        {{ resolvedUser.bio }}
                     </div>
-                    <div v-if="user.followingCount != null" class="flex flex-row" style="margin-top: 12px;">
+                    <div v-if="resolvedUser.followingCount != null" class="flex flex-row" style="margin-top: 12px;">
                         <div>
-                            <span class="avatar-popper-stats-number">{{ format10k(user.followingCount) }} </span>
+                            <span class="avatar-popper-stats-number">{{ format10k(resolvedUser.followingCount) }} </span>
                             <span class="avatar-popper-stats" style="margin-left: 4px;">正在关注</span>
                         </div>
                         <div style="margin-left: 20px;">
-                            <span class="avatar-popper-stats-number">{{ format10k(user.followerCount) }}</span>
+                            <span class="avatar-popper-stats-number">{{ format10k(resolvedUser.followerCount) }}</span>
                             <span class="avatar-popper-stats" style="margin-left: 4px;">关注者</span>
                         </div>
                     </div>
@@ -103,7 +108,7 @@ const appendToApp = () => document.querySelector(".main-column");
         </template>
     </tippy>
     <div v-else class="avatar" :class="{ 'small': small, 'large': large }">
-        <img :src="user.avatarUrl" />
+        <img :src="resolvedUser.avatarUrl" />
         <div class="avatar-mask" @click.stop="onClick()" @click.middle.stop="onClick(true)">
         </div>
     </div>

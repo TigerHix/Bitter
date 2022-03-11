@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {defineProps, markRaw, PropType, ref} from 'vue';
-import { Post } from "../../models/models"
+import {computed, defineProps, markRaw, PropType} from 'vue';
+import { Post } from "@/models/models"
 import Avatar from './avatar.vue';
 import Text from './text.vue';
 
@@ -13,10 +13,12 @@ const props = defineProps({
   truncate: { type: Boolean, required: false, default: false },
   truncateLength: { type: Number, required: false, default: 140 }
 })
-const blocks = ref<any[]>([])
+const blocks = computed<any[]>(() => {
+  const post = props.post
+  if (!post.text) return []
 
-const parsePostText = (post: Post) => {
-  if (!post.text) return ''
+  const blocks = []
+
   let html = post.text
   let textCursor = 0
   let mentionPrecedes = false
@@ -24,18 +26,18 @@ const parsePostText = (post: Post) => {
   const mentions = []
   for (let mentionedUser of post.mentionedUsers) {
     Array.from(html.matchAll(new RegExp('@' + mentionedUser.name, 'g')))
-      .map(match => {
-        mentions.push({ location: match.index, length: match[0].length, data: mentionedUser.uid.toString() })
-      })
+        .map(match => {
+          mentions.push({ location: match.index, length: match[0].length, data: mentionedUser.uid.toString() })
+        })
   }
   mentions.push(...post.mentions)
 
   for (let mention of mentions) {
-    blocks.value.push({ type: TextType, props: { context: post, html: (mentionPrecedes ? ' ' : '') + html.substring(textCursor, mention.location) }})
+    blocks.push({ type: TextType, props: { context: post, html: (mentionPrecedes ? ' ' : '') + html.substring(textCursor, mention.location) }})
     textCursor = mention.location
     if (props.truncate && textCursor > props.truncateLength) break
 
-    blocks.value.push({ type: AvatarType, props: { user: { name: html.substring(mention.location + 1, mention.location + mention.length).trim(), uid: parseInt(mention.data) }, mode: 'text' }})
+    blocks.push({ type: AvatarType, props: { user: { name: html.substring(mention.location + 1, mention.location + mention.length).trim(), uid: parseInt(mention.data) }, mode: 'text' }})
     textCursor = mention.location + mention.length
     if (props.truncate && textCursor > props.truncateLength) break
 
@@ -43,21 +45,22 @@ const parsePostText = (post: Post) => {
   }
 
   if (!props.truncate || textCursor <= props.truncateLength) {
-    blocks.value.push({type: TextType, props: {context: post, html: html.substring(textCursor, html.length)}})
+    blocks.push({type: TextType, props: {context: post, html: html.substring(textCursor, html.length)}})
     textCursor = html.length
   }
   if (props.truncate && textCursor > props.truncateLength) {
     // Truncate last block
-    const lastBlock = blocks.value[blocks.value.length - 1]
+    const lastBlock = blocks[blocks.length - 1]
     if (lastBlock.type === TextType) {
-      lastBlock.props.html = truncateHtml(lastBlock.props.html, lastBlock.props.html.length - (textCursor - props.truncateLength))
+      lastBlock.props.html = truncateHtml(lastBlock.props.html, lastBlock.props.html!.length - (textCursor - props.truncateLength))
     } else if (lastBlock.type === AvatarType) {
-      blocks.value.push({type: TextType, props: { html: '…' }})
+      blocks.push({type: TextType, props: { html: '…' }})
     }
   }
-}
 
-parsePostText(props.post)
+  return blocks
+})
+
 </script>
 
 <template>
