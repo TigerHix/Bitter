@@ -76,7 +76,8 @@ const store = createStore({
       cache: {
         posts: {}
       },
-      timelineMostRecentPostId: null
+      timelineMostRecentPostId: null,
+      unreadPostCount: 0
     }
   },
   getters: {
@@ -116,6 +117,9 @@ const store = createStore({
     },
     setTimelineMostRecentPostId(state: any, postId: string) {
       state.timelineMostRecentPostId = postId
+    },
+    setUnreadPostCount(state: any, postCount: number) {
+      state.unreadPostCount = postCount
     }
   }
 })

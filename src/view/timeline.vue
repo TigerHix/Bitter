@@ -4,7 +4,7 @@ export default { name: 'Timeline' }
 
 <script setup lang="ts">
 
-import { ref, defineExpose, PropType, defineProps, defineEmits, watch } from "vue";
+import { ref, defineExpose, PropType, defineProps, watch } from "vue";
 import PostCard from "./components/postCard.vue";
 import TopBar from './components/topBar.vue'
 import { parseAndFilterPosts } from "../utils/parsers";
@@ -16,7 +16,6 @@ const router = useRouter();
 const path = router.currentRoute.value.fullPath
 const store = useStore()
 const infiniteLoading = ref()
-const emit = defineEmits(['clearUnreadPostCount'])
 
 let posts = ref<Post[]>([]);
 let refreshAbortController: AbortController = new AbortController()
@@ -121,8 +120,7 @@ const refresh = () => {
   refreshAbortController = new AbortController()
   posts.value = []
   firstLoad = true
-  unreadPostCount.value = 0
-  emit('clearUnreadPostCount')
+  store.commit('setUnreadPostCount', 0)
 
   infiniteLoading.value.emitter()
 }
@@ -134,17 +132,16 @@ const groupFilterPosts = (posts: Post[]) => {
   })
 }
 
-const unreadPostCount = ref(-1)
-defineExpose({ refresh, unreadPostCount })
+defineExpose({ refresh })
 </script>
 
 <template>
   <div class="flex flex-column justify-content-start">
     <TopBar title="主页" :icon="null" />
     <div class="content flex flex-column justify-content-start">
-      <div v-if="unreadPostCount > 0" class="post-show-latest flex flex-row px-3 justify-content-center align-items-center bottom-separator" @click="refresh()">
+      <div v-if="$store.state.unreadPostCount > 0 && !groupFilter" class="post-show-latest flex flex-row px-3 justify-content-center align-items-center bottom-separator" @click="refresh()">
         <div class="flex justify-content-center align-items-center" style="height: 16px;">
-          显示 {{unreadPostCount}} 条新动态
+          显示 {{$store.state.unreadPostCount}} 条新动态
         </div>
       </div>
       <div v-for="post in groupFilterPosts(posts)" :key="post.id" class="post-border">

@@ -117,19 +117,16 @@ const checkUnreadNotifications = () => {
 }
 checkUnreadNotifications()
 
-const unreadPostCount = ref(-1)
 const checkUnreadPosts = () => {
   if (store.state.timelineMostRecentPostId) {
     fetch(`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/web_cyclic_num?type_list=268435455&offset=${store.state.timelineMostRecentPostId}`).then(res => res.json())
       .then((data: any) => {
-        unreadPostCount.value = data.data.update_num ?? -1
-        mainColumnComponent.value!.unreadPostCount = unreadPostCount.value
+        store.commit('setUnreadPostCount', data.data.update_num ?? 0)
       })
   }
   setTimeout(checkUnreadPosts, 1000 * 60)
 }
 checkUnreadPosts()
-const clearUnreadPostCount = () => unreadPostCount.value = -1
 </script>
 
 <template>
@@ -137,7 +134,7 @@ const clearUnreadPostCount = () => unreadPostCount.value = -1
     <div class="flex flex-column navigation align-items-center justify-content-center">
       <IconButton src="logo.png" hoverBackgroundColor="rgba(251, 114, 153, 0.1)" activeBackgroundColor="rgba(251, 114, 153, 0.1)" :size="50" :padding="4" @click="onHome()" class="navigation-icon" />
       <IconButton :icon="['fas', 'home']" :color="path === '/' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onHome()" class="navigation-icon"
-                  :badge="unreadPostCount > 0 ? 0 : -1" />
+                  :badge="$store.state.unreadPostCount > 0 ? 0 : -1" />
       <IconButton :icon="['fas', 'hashtag']" :color="path === '/explore' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22" @click="onExplore()" class="navigation-icon" />
       <IconButton :icon="['fas', 'bell']" :color="path === '/notifications' ? '#0f1419' : 'rgb(207, 217, 222)'" hoverBackgroundColor="rgba(15, 20, 25, 0.1)" activeBackgroundColor="rgba(15, 20, 25, 0.1)" :size="50" :font-size="22"
                   @click="onNotifications()"
@@ -148,9 +145,7 @@ const clearUnreadPostCount = () => unreadPostCount.value = -1
     <router-view v-if="authenticated" id="mainColumn" class="flex main-column" v-slot="{ Component }">
       <keep-alive>
         <component :key="$route.fullPath" :is="Component" ref="mainColumnComponent"
-                   :groupFilter="(selectedGroup == null || selectedGroup.default) ? null : selectedGroup"
-                   :unreadPostCount="unreadPostCount"
-                   @clearUnreadPostCount="clearUnreadPostCount()" />
+                   :groupFilter="(selectedGroup == null || selectedGroup.default) ? null : selectedGroup" />
       </keep-alive>
     </router-view>
     <div class="flex flex-column sidebar">
