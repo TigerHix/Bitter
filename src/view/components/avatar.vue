@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FollowButton from './followButton.vue';
 import { User } from "@/models/models"
-import {defineProps, PropType, ref, watch} from "vue"
+import {computed, defineProps, PropType, ref, watch} from "vue"
 import { useRouter } from "vue-router"
 import {fetchUser} from "@/utils/webRequests";
 import {format10k} from "@/utils/formatNumber";
@@ -37,6 +37,14 @@ const onHover = () => {
     })
 }
 const appendToApp = () => document.querySelector(".main-column");
+
+const avatarUrl = computed(() => {
+  if (resolvedUser.value.avatarUrl) {
+    return resolvedUser.value.avatarUrl.replace('http://', 'https://') + '@240w_240h_1c_1s.webp'
+  } else {
+    return 'https://i0.hdslb.com/bfs/face/member/noface.jpg@240w_240h_1c_1s.webp'
+  }
+})
 </script>
 
 <template>
@@ -56,7 +64,7 @@ const appendToApp = () => document.querySelector(".main-column");
         <template #default>
             <slot>
                 <div v-if="mode === 'image'" class="avatar" :class="{ 'small': small, 'medium': medium, 'large': large }">
-                    <img :src="resolvedUser.avatarUrl" />
+                    <img :src="avatarUrl" />
                     <div v-if="popup">
                         <div class="avatar-mask" @click.stop="onClick()" @click.middle.stop="onClick(true)"></div>
                     </div>
@@ -108,7 +116,7 @@ const appendToApp = () => document.querySelector(".main-column");
         </template>
     </tippy>
     <div v-else class="avatar" :class="{ 'small': small, 'large': large }">
-        <img :src="resolvedUser.avatarUrl" />
+        <img :src="avatarUrl" />
         <div class="avatar-mask" @click.stop="onClick()" @click.middle.stop="onClick(true)">
         </div>
     </div>
