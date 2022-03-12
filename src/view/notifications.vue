@@ -435,7 +435,7 @@ defineExpose({ refresh })
                   <span><Avatar :user="noti.likedUsers[0]" mode="text" :bold="true" :prependAt="false" /> 喜欢了你的{{ getPostTypeName(noti.post.type) }}</span>
                 </div>
                 <div v-else-if="noti.likeCount === 2 && noti.likedUsers.length === 2">
-                  <span><Avatar :user="noti.likedUsers[0]" mode="text" :bold="true" :prependAt="false" /> 和 <Avatar :user="noti.likedUsers[1]" mode="text" /> 喜欢了你的{{ getPostTypeName(noti.post.type) }}</span>
+                  <span><Avatar :user="noti.likedUsers[0]" mode="text" :bold="true" :prependAt="false" /> 和 <Avatar :user="noti.likedUsers[1]" mode="text" :bold="true" :prependAt="false" /> 喜欢了你的{{ getPostTypeName(noti.post.type) }}</span>
                 </div>
                 <div v-else>
                   <span><Avatar :user="noti.likedUsers[0]" mode="text" :bold="true" :prependAt="false" /> 和另外 {{noti.likeCount - 1}} 人喜欢了你的{{ getPostTypeName(noti.post.type) }}</span>
