@@ -13,6 +13,7 @@ import { formatYearMonth } from '@/utils/formatTimestamp'
 import {Post, PostType, User} from "@/models/models";
 import {fetchUser} from "@/utils/webRequests";
 import {format10k} from "@/utils/formatNumber";
+import PostText from "@/view/components/postText.vue";
 
 const router = useRouter()
 const store = useStore()
@@ -276,7 +277,7 @@ router.afterEach(() => {
         </div>
         <div style="margin-top: 12px;">
           <div style="font-size: 15px; line-height: 20px; color: #0F1419">
-            {{ user.bio }}
+            <PostText :post="{ text: user.bio }" />
           </div>
         </div>
         <div v-if="user.registrationTimestamp" style="margin-top: 12px;">

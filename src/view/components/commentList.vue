@@ -7,6 +7,7 @@ import PostEditor from "@/view/components/postEditor.vue";
 import { useRouter } from "vue-router"
 import { useStore } from "vuex";
 import {fetchAndCachePost} from "@/utils/webRequests";
+import { DateTime } from 'luxon';
 
 const router = useRouter()
 const store = useStore()
@@ -26,6 +27,7 @@ const post = computed<Post>(() => {
 })
 let type = -1
 let oid: any = null
+let currentSuffix = DateTime.now().toMillis()
 
 const loadCommentSection = async (post: Post) => {
   const results = parseCommentTypeAndObjectId(post)
@@ -35,7 +37,7 @@ const loadCommentSection = async (post: Post) => {
     // Post data is insufficient. Re-fetch the post before continue
     await fetchAndCachePost(store, props.postId)
   }
-  fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`)
+  fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=0&type=${type}&oid=${oid}&mode=${props.sort}&plat=1&_=${currentSuffix++}`)
     .then((res) => res.json())
     .then((data) => {
       console.log('Parsing comment section:')
@@ -73,7 +75,7 @@ const loadMoreComments = async ($state: any) => {
   console.log("Loading more comments");
   console.log(commentSection.value)
   try {
-    const response = await fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=${commentSection.value.cursor.next}&type=${type}&oid=${oid}&mode=${props.sort}&plat=1`);
+    const response = await fetch(`https://api.bilibili.com/x/v2/reply/main?jsonp=jsonp&next=${commentSection.value.cursor.next}&type=${type}&oid=${oid}&mode=${props.sort}&plat=1&_=${currentSuffix++}`);
     const data = await response.json()
     if (data.code != 0) {
       console.log('Error!')

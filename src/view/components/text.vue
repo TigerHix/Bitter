@@ -8,7 +8,7 @@ const processedHtml = computed(() => {
   const post = props.context;
   let html = props.html;
 
-  if (post) {
+  if (post && post.emoticons) {
     for (let emoticon of post.emoticons) {
       html = html.replaceAll(emoticon.text, `<img src=${emoticon.url} class="post-emoticon" />`)
     }

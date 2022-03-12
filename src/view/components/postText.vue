@@ -24,13 +24,15 @@ const blocks = computed<any[]>(() => {
   let mentionPrecedes = false
 
   const mentions = []
-  for (let mentionedUser of post.mentionedUsers) {
-    Array.from(html.matchAll(new RegExp('@' + mentionedUser.name, 'g')))
-        .map(match => {
-          mentions.push({ location: match.index, length: match[0].length, data: mentionedUser.uid.toString() })
-        })
+  if (post.mentionedUsers) {
+    for (let mentionedUser of post.mentionedUsers) {
+      Array.from(html.matchAll(new RegExp('@' + mentionedUser.name, 'g')))
+          .map(match => {
+            mentions.push({location: match.index, length: match[0].length, data: mentionedUser.uid.toString()})
+          })
+    }
+    mentions.push(...post.mentions)
   }
-  mentions.push(...post.mentions)
 
   for (let mention of mentions) {
     blocks.push({ type: TextType, props: { context: post, html: (mentionPrecedes ? ' ' : '') + html.substring(textCursor, mention.location) }})
