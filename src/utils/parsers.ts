@@ -184,7 +184,7 @@ export const parsePost = (data: any): Post => {
     isAd: data.display?.add_on_card_info?.at(0)?.goods_card,
 
     commentType: toObjectType(type),
-    commentObjectId: data.desc.rid_str,
+    commentObjectId: toObjectType(type) === ObjectType.Post ? data.desc.dynamic_id_str : data.desc.rid_str,
 
     isPinned: data.extra?.is_space_top === 1
   };
