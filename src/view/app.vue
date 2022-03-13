@@ -112,8 +112,12 @@ const checkUnreadNotifications = () => {
     .then((data: any) => {
       unreadNotificationCount.value = data.data.at + data.data.like + data.data.reply
       if (unreadNotificationCount.value === 0) unreadNotificationCount.value = -1
+      // if (unreadNotificationCount.value > 0 && path.value === '/notifications') {
+      //   unreadNotificationCount.value = 0
+      //   mainColumnComponent.value!.refresh()
+      // }
     })
-  setTimeout(checkUnreadNotifications, 1000 * 30)
+  setTimeout(checkUnreadNotifications, 1000 * 60)
 }
 checkUnreadNotifications()
 
