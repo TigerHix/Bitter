@@ -113,7 +113,7 @@ const checkUnreadNotifications = () => {
       unreadNotificationCount.value = data.data.at + data.data.like + data.data.reply
       if (unreadNotificationCount.value === 0) unreadNotificationCount.value = -1
       if (unreadNotificationCount.value > 0 && path.value === '/notifications') {
-        unreadNotificationCount.value = 0
+        unreadNotificationCount.value = -1
         mainColumnComponent.value!.refresh()
       }
     })
