@@ -40,8 +40,10 @@ const getPostTypeName = (type: PostType) => {
 
 onMounted(() => refresh())
 
-const refresh = () => {
+const refresh = (resetTab: boolean = true) => {
   console.log('Refreshing')
+
+  if (resetTab) tabActiveIndex.value = 0
 
   likeCursor = { id: 0, time: 0, is_end: false }
   replyCursor = { id: 0, time: 0, is_end: false }
@@ -345,7 +347,7 @@ const viewPost = (noti: Notification, newTab: boolean = false) => {
 const tabActiveIndex = ref(0)
 const onTabChange = () => {
   window.scrollTo(0, 0)
-  refresh()
+  refresh(false)
 }
 
 defineExpose({ refresh })

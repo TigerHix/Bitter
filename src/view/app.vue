@@ -113,7 +113,7 @@ const checkUnreadNotifications = () => {
       unreadNotificationCount.value = data.data.at + data.data.like + data.data.reply
       if (unreadNotificationCount.value === 0) unreadNotificationCount.value = -1
     })
-  setTimeout(checkUnreadNotifications, 1000 * 60)
+  setTimeout(checkUnreadNotifications, 1000 * 30)
 }
 checkUnreadNotifications()
 
@@ -124,7 +124,7 @@ const checkUnreadPosts = () => {
         store.commit('setUnreadPostCount', data.data.update_num ?? 0)
       })
   }
-  setTimeout(checkUnreadPosts, 1000 * 60)
+  setTimeout(checkUnreadPosts, 1000 * 30)
 }
 checkUnreadPosts()
 </script>
