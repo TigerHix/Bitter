@@ -2,9 +2,13 @@
 
 Bilibili, but Twitter.
 
+- 时间线
 ![](https://i.imgur.com/hpYmt9D.jpg)
+- 话题
 ![](https://i.imgur.com/VZEfECB.jpg)
+- 搜索（动态）
 ![](https://i.imgur.com/h4AvnTo.jpg)
+- 搜索（用户）
 ![](https://i.imgur.com/aXxltgd.jpg)
 
 ## 这是什么？
