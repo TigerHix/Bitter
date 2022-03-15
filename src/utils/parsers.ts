@@ -154,8 +154,9 @@ export const parseVideo = (data: any) => {
 }
 
 export const parsePost = (data: any): Post => {
-  const card = JSON.parse(data.card);
-  const type = data.desc.type;
+  const card = JSON.parse(data.card)
+  const extend = JSON.parse(data.extend_json)
+  const type = data.desc.type
   const post: Post = {
     id: data.desc.dynamic_id_str,
 
@@ -186,7 +187,8 @@ export const parsePost = (data: any): Post => {
     commentType: toObjectType(type),
     commentObjectId: toObjectType(type) === ObjectType.Post ? data.desc.dynamic_id_str : data.desc.rid_str,
 
-    isPinned: data.extra?.is_space_top === 1
+    isPinned: data.extra?.is_space_top === 1,
+    headerMessage: extend.dispute?.content ?? null
   };
 
   if (type == PostType.Album) {

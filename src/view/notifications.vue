@@ -266,7 +266,7 @@ const loadMoreNotifications = async ($state: any) => {
       replyCursor = replyData.data.cursor
 
       const parseParentPostId = (data: any) => {
-        return ObjectIdHelper.fromTypeAndId(data.business_id, data.subject_id)
+        return ObjectIdHelper.fromTypeAndId(data.business_id, data.uri.match(postIdUriRegExp)?.[1] ?? data.subject_id)
       }
       const parseReplyItem = (item: any) => ({
         id: item.id,
@@ -286,7 +286,7 @@ const loadMoreNotifications = async ($state: any) => {
       atCursor = atData.data.cursor
 
       const parseParentPostId = (data: any) => {
-        return ObjectIdHelper.fromTypeAndId(data.business_id, data.subject_id)
+        return ObjectIdHelper.fromTypeAndId(data.business_id, data.uri.match(postIdUriRegExp)?.[1] ?? data.subject_id)
       }
       const parseAtItem = (item: any) => ({
         id: item.id,

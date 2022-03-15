@@ -199,7 +199,15 @@ router.afterEach(() => {
   </div>
   <div v-if="post" ref="postContainer" class="post-container" :class="{ 'post-container-link': link, 'large': large, 'no-padding': noPadding }"  @click="link && onLink() && $event.stopPropagation()" @click.middle="link && onLink(true) && $event.stopPropagation()"
     :style="{'background-color': backgroundColor}">
-    <div v-if="post.isPinned && !embedded" class="flex post-header" :class="{ 'large': large }">
+    <div v-if="post.headerMessage && !embedded" class="flex post-header" :class="{ 'large': large }">
+      <div class="flex justify-content-center align-items-center" style="font-size: 16px; margin-right: 12px; width: 20px;">
+        <font-awesome-icon :icon="['fas', 'triangle-exclamation']" />
+      </div>
+      <div class="post-link" style="padding-top: 2px">
+        {{ post.headerMessage }}
+      </div>
+    </div>
+    <div v-else-if="post.isPinned && !embedded" class="flex post-header" :class="{ 'large': large }">
       <div class="flex justify-content-center align-items-center" style="font-size: 16px; margin-right: 12px; width: 20px;">
         <font-awesome-icon :icon="['fas', 'thumbtack']" />
       </div>

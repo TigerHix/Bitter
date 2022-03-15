@@ -37,6 +37,7 @@ export interface Post {
   commentThreadId?: string
 
   isPinned?: boolean
+  headerMessage?: string
 }
 
 export interface Emoticon {
