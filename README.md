@@ -2,9 +2,10 @@
 
 Bilibili, but Twitter.
 
-![](https://i.imgur.com/W37CDfu.png)
-![](https://i.imgur.com/yzKiLar.png)
-![](https://i.imgur.com/UVVFplh.png)
+![](https://i.imgur.com/hpYmt9D.jpg)
+![](https://i.imgur.com/VZEfECB.jpg)
+![](https://i.imgur.com/h4AvnTo.jpg)
+![](https://i.imgur.com/aXxltgd.jpg)
 
 ## 这是什么？
 
@@ -17,15 +18,16 @@ Bitter（*Bi*libili + Twi*tter*）是一个 Chrome 插件，让你可以用推�
 - 可以看到用户是否特别关注了你
 - 可以查看动态点赞用户
 - 可以看到动态的转发详情
+- 以内容或 #tag# 搜索全站动态
+- 查看动态热门话题
 
 未来打算加入的特性：
 - 时间线过滤动态，比如只看图片类动态
-- 搜索全站 / 特定用户动态
-- 查看带有指定 tag 的动态
+- 搜索特定用户动态
 - 动态更新推送
 - 书签功能
 
-目前缺少*非常多*的必要功能，比如无法评论，所以暂时不发布 .crx。
+打算做完一个我心目中「能用」的版本后再发布 .crx。
 
 ## 项目上手
 ```
