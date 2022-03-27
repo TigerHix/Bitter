@@ -236,7 +236,7 @@ const loadMoreNotifications = async ($state: any) => {
           return ObjectIdHelper.fromTypeAndId(ObjectType.Post, data.uri.match(postIdRegExp)[1])
         }
         if (columnIdRegExp.test(data.uri)) {
-          return ObjectIdHelper.fromTypeAndId(ObjectType.Column, data.uri.match(postIdRegExp)[1])
+          return ObjectIdHelper.fromTypeAndId(ObjectType.Column, data.uri.match(columnIdRegExp)[1])
         }
         if (videoIdRegExp.test(data.uri)) {
           return ObjectIdHelper.fromTypeAndId(ObjectType.Video, data.uri.match(videoIdRegExp)[1])
