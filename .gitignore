@@ -22,5 +22,4 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-todo.md
-note.md
+/scratch
